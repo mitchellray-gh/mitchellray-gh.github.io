@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>[Your Name] — UX Designer, Data & AI Products</title>
+    <style>
+        :root {
+            --bg: #0e0e12;
+            --surface: #18181f;
+            --surface-2: #1f1f2a;
+            --border: #2a2a3a;
+            --text: #e4e4ed;
+            --text-dim: #8a8a9e;
+            --accent: #6c63ff;
+            --accent-light: #8b83ff;
+            --accent-glow: rgba(108, 99, 255, 0.15);
+            --green: #34d399;
+            --amber: #fbbf24;
+            --rose: #f472b6;
+            --cyan: #22d3ee;
+            --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            --mono: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+        }
+
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: var(--font);
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        a { color: var(--accent-light); text-decoration: none; transition: color 0.2s; }
+        a:hover { color: var(--green); }
+
+        /* NAV */
+        nav {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+            background: rgba(14,14,18,0.85);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border);
+            padding: 0 2rem;
+        }
+        nav .inner {
+            max-width: 1200px; margin: 0 auto;
+            display: flex; align-items: center; justify-content: space-between;
+            height: 60px;
+        }
+        nav .logo { font-weight: 700; font-size: 1.1rem; color: var(--text); }
+        nav .logo span { color: var(--accent); }
+        nav ul { list-style: none; display: flex; gap: 1.5rem; }
+        nav ul li a {
+            color: var(--text-dim); font-size: 0.85rem; font-weight: 500;
+            transition: color 0.2s;
+        }
+        nav ul li a:hover, nav ul li a.active { color: var(--text); }
+
+        .hamburger {
+            display: none; background: none; border: none; cursor: pointer;
+            flex-direction: column; gap: 5px;
+        }
+        .hamburger span {
+            width: 22px; height: 2px; background: var(--text); display: block;
+            transition: 0.3s;
+        }
+
+        /* SECTIONS */
+        section { padding: 6rem 2rem; max-width: 1200px; margin: 0 auto; }
+
+        .section-label {
+            font-size: 0.7rem; font-weight: 700; letter-spacing: 3px;
+            text-transform: uppercase; color: var(--accent); margin-bottom: 1rem;
+        }
+        .section-title {
+            font-size: 2rem; font-weight: 800; margin-bottom: 1rem;
+        }
+        .section-subtitle {
+            color: var(--text-dim); font-size: 1.05rem; max-width: 600px;
+            margin-bottom: 3rem;
+        }
+
+        /* HERO */
+        #hero {
+            min-height: 100vh; display: flex; align-items: center;
+            padding-top: 60px; position: relative;
+        }
+        #hero .hero-content { max-width: 720px; }
+        #hero .hero-badge {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            background: var(--accent-glow); border: 1px solid rgba(108,99,255,0.3);
+            padding: 0.4rem 1rem; border-radius: 100px; font-size: 0.8rem;
+            color: var(--accent-light); font-weight: 500; margin-bottom: 1.5rem;
+        }
+        #hero .hero-badge .dot {
+            width: 6px; height: 6px; border-radius: 50%; background: var(--green);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+        #hero h1 {
+            font-size: clamp(2.5rem, 6vw, 4rem); font-weight: 800;
+            line-height: 1.1; margin-bottom: 1rem;
+        }
+        #hero h1 .gradient {
+            background: linear-gradient(135deg, var(--accent), var(--cyan));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        #hero .tagline {
+            font-size: 1.15rem; color: var(--text-dim); margin-bottom: 2rem;
+            max-width: 560px;
+        }
+        #hero .metric-badge {
+            display: inline-flex; align-items: center; gap: 0.75rem;
+            background: var(--surface); border: 1px solid var(--border);
+            padding: 0.75rem 1.25rem; border-radius: 12px; margin-bottom: 2.5rem;
+        }
+        #hero .metric-badge .number {
+            font-size: 1.5rem; font-weight: 800; color: var(--green);
+        }
+        #hero .metric-badge .label {
+            font-size: 0.8rem; color: var(--text-dim);
+        }
+        .hero-buttons { display: flex; gap: 1rem; flex-wrap: wrap; }
+        .btn {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            padding: 0.75rem 1.75rem; border-radius: 10px; font-weight: 600;
+            font-size: 0.9rem; transition: all 0.25s; cursor: pointer;
+            border: none; font-family: var(--font);
+        }
+        .btn-primary {
+            background: var(--accent); color: #fff;
+            box-shadow: 0 4px 20px rgba(108,99,255,0.3);
+        }
+        .btn-primary:hover {
+            background: var(--accent-light); color: #fff;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(108,99,255,0.4);
+        }
+        .btn-ghost {
+            background: transparent; color: var(--text-dim);
+            border: 1px solid var(--border);
+        }
+        .btn-ghost:hover {
+            border-color: var(--accent); color: var(--text);
+            transform: translateY(-2px);
+        }
+
+        /* FLOATING SHAPES (hero decoration) */
+        .hero-bg {
+            position: absolute; top: 0; right: 0; bottom: 0; width: 50%;
+            pointer-events: none; overflow: hidden;
+        }
+        .hero-bg .orb {
+            position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.35;
+        }
+        .hero-bg .orb-1 {
+            width: 400px; height: 400px; background: var(--accent);
+            top: 15%; right: 10%;
+        }
+        .hero-bg .orb-2 {
+            width: 300px; height: 300px; background: var(--cyan);
+            top: 50%; right: 25%; opacity: 0.2;
+        }
+
+        /* STATS BAR */
+        .stats-bar {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1.5rem; margin-top: 4rem; padding-top: 3rem;
+            border-top: 1px solid var(--border);
+        }
+        .stat-item .stat-number {
+            font-size: 1.6rem; font-weight: 800; color: var(--accent-light);
+        }
+        .stat-item .stat-desc {
+            font-size: 0.78rem; color: var(--text-dim); margin-top: 0.25rem;
+        }
+
+        /* CASE STUDIES */
+        .case-card {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 16px; padding: 2.5rem; margin-bottom: 2rem;
+            transition: border-color 0.3s, transform 0.3s;
+            position: relative; overflow: hidden;
+        }
+        .case-card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+            background: linear-gradient(90deg, var(--accent), var(--cyan));
+            opacity: 0; transition: opacity 0.3s;
+        }
+        .case-card:hover { border-color: var(--accent); transform: translateY(-4px); }
+        .case-card:hover::before { opacity: 1; }
+        .case-card .case-letter {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 36px; height: 36px; border-radius: 10px; font-weight: 800;
+            font-size: 0.85rem; margin-bottom: 1rem;
+        }
+        .case-a .case-letter { background: rgba(108,99,255,0.15); color: var(--accent-light); }
+        .case-b .case-letter { background: rgba(34,211,238,0.15); color: var(--cyan); }
+        .case-c .case-letter { background: rgba(244,114,182,0.15); color: var(--rose); }
+        .case-card h3 { font-size: 1.3rem; font-weight: 700; margin-bottom: 1rem; }
+        .case-card .case-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem;
+        }
+        .case-block-label {
+            font-size: 0.65rem; font-weight: 700; letter-spacing: 2px;
+            text-transform: uppercase; margin-bottom: 0.5rem;
+        }
+        .case-block-label.problem { color: var(--amber); }
+        .case-block-label.approach { color: var(--accent-light); }
+        .case-block-label.outcome { color: var(--green); }
+        .case-card p { color: var(--text-dim); font-size: 0.88rem; line-height: 1.7; }
+        .outcome-stats {
+            display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 0.75rem;
+        }
+        .outcome-stat {
+            background: rgba(52,211,153,0.08); border: 1px solid rgba(52,211,153,0.2);
+            padding: 0.4rem 0.85rem; border-radius: 8px; font-size: 0.78rem;
+            font-weight: 600; color: var(--green);
+        }
+        .tags { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1.25rem; }
+        .tag {
+            background: var(--surface-2); border: 1px solid var(--border);
+            padding: 0.25rem 0.65rem; border-radius: 6px; font-size: 0.7rem;
+            color: var(--text-dim); font-weight: 500;
+        }
+
+        /* MORE WORK GRID */
+        .more-work-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.25rem;
+        }
+        .work-card {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 12px; padding: 1.75rem; transition: all 0.25s;
+        }
+        .work-card:hover { border-color: var(--accent); transform: translateY(-3px); }
+        .work-card h4 { font-size: 1rem; font-weight: 700; margin-bottom: 0.6rem; }
+        .work-card p { color: var(--text-dim); font-size: 0.83rem; line-height: 1.65; }
+        .work-card .work-outcome {
+            margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid var(--border);
+        }
+        .work-card .work-outcome strong { color: var(--green); font-weight: 700; }
+
+        /* DE CARDS */
+        .de-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 1.25rem;
+        }
+        .de-card {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 12px; padding: 1.75rem; transition: all 0.25s;
+            position: relative;
+        }
+        .de-card:hover { border-color: var(--cyan); transform: translateY(-3px); }
+        .de-card .de-number {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 28px; height: 28px; border-radius: 8px; font-size: 0.7rem;
+            font-weight: 800; background: rgba(34,211,238,0.12); color: var(--cyan);
+            margin-bottom: 0.75rem;
+        }
+        .de-card h4 { font-size: 0.95rem; font-weight: 700; margin-bottom: 0.5rem; }
+        .de-card p { color: var(--text-dim); font-size: 0.82rem; line-height: 1.65; }
+        .de-card .de-outcome {
+            margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid var(--border);
+        }
+        .de-card .de-outcome strong { color: var(--green); }
+
+        /* DE STATS TABLE */
+        .de-stats {
+            margin-top: 3rem; background: var(--surface); border: 1px solid var(--border);
+            border-radius: 12px; overflow: hidden;
+        }
+        .de-stats-row {
+            display: flex; align-items: center; padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border); gap: 1.5rem;
+        }
+        .de-stats-row:last-child { border-bottom: none; }
+        .de-stats-row .de-stat-value {
+            font-weight: 800; color: var(--cyan); min-width: 160px; font-size: 0.9rem;
+        }
+        .de-stats-row .de-stat-desc { color: var(--text-dim); font-size: 0.83rem; }
+
+        /* PROCESS / SKILLS */
+        .skills-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.25rem;
+        }
+        .skill-group {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 12px; padding: 1.75rem;
+        }
+        .skill-group h4 {
+            font-size: 0.9rem; font-weight: 700; margin-bottom: 1rem;
+            display: flex; align-items: center; gap: 0.5rem;
+        }
+        .skill-group h4 .icon {
+            width: 28px; height: 28px; border-radius: 8px;
+            display: inline-flex; align-items: center; justify-content: center;
+            font-size: 0.85rem;
+        }
+        .skill-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+        .skill-chip {
+            background: var(--surface-2); border: 1px solid var(--border);
+            padding: 0.3rem 0.7rem; border-radius: 6px; font-size: 0.73rem;
+            color: var(--text-dim); font-weight: 500;
+        }
+
+        /* METRICS BAND */
+        .metrics-band {
+            background: linear-gradient(135deg, rgba(108,99,255,0.08), rgba(34,211,238,0.08));
+            border: 1px solid var(--border); border-radius: 16px;
+            padding: 3rem; margin-top: 2rem;
+        }
+        .metrics-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+        }
+        .metric-item { text-align: center; }
+        .metric-item .metric-val {
+            font-size: 2rem; font-weight: 800;
+            background: linear-gradient(135deg, var(--accent), var(--cyan));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .metric-item .metric-desc {
+            font-size: 0.78rem; color: var(--text-dim); margin-top: 0.25rem;
+        }
+
+        /* ABOUT */
+        .about-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 3rem;
+            align-items: start;
+        }
+        .about-text p { color: var(--text-dim); font-size: 0.92rem; line-height: 1.8; margin-bottom: 1rem; }
+        .about-text .bio-long { margin-top: 1.5rem; }
+        .recognition-list { list-style: none; }
+        .recognition-list li {
+            display: flex; gap: 0.75rem; align-items: flex-start;
+            padding: 0.75rem 0; border-bottom: 1px solid var(--border);
+        }
+        .recognition-list li:last-child { border-bottom: none; }
+        .recognition-list .rec-icon {
+            width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(108,99,255,0.12); color: var(--accent-light); font-size: 0.85rem;
+        }
+        .recognition-list .rec-text {
+            color: var(--text-dim); font-size: 0.85rem; line-height: 1.5;
+        }
+
+        /* CONTACT */
+        #contact { text-align: center; }
+        .contact-card {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 16px; padding: 3rem; max-width: 640px;
+            margin: 0 auto;
+        }
+        .contact-card .cta-line {
+            font-size: 1.1rem; color: var(--text-dim); margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+        .contact-links { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+        .contact-link {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            background: var(--surface-2); border: 1px solid var(--border);
+            padding: 0.75rem 1.5rem; border-radius: 10px; font-size: 0.88rem;
+            font-weight: 600; color: var(--text); transition: all 0.25s;
+        }
+        .contact-link:hover {
+            border-color: var(--accent); color: var(--accent-light);
+            transform: translateY(-2px);
+        }
+        .contact-link svg { width: 18px; height: 18px; }
+
+        /* FOOTER */
+        footer {
+            border-top: 1px solid var(--border); padding: 2rem;
+            text-align: center; color: var(--text-dim); font-size: 0.75rem;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            nav ul { display: none; }
+            .hamburger { display: flex; }
+            nav ul.open {
+                display: flex; flex-direction: column;
+                position: absolute; top: 60px; left: 0; right: 0;
+                background: rgba(14,14,18,0.95); backdrop-filter: blur(16px);
+                padding: 1.5rem 2rem; gap: 1rem;
+                border-bottom: 1px solid var(--border);
+            }
+            .case-card .case-grid {
+                grid-template-columns: 1fr;
+            }
+            .about-grid { grid-template-columns: 1fr; }
+            #hero h1 { font-size: 2.2rem; }
+            .hero-bg { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+    <div class="inner">
+        <a href="#hero" class="logo"><span>&lt;</span>Your Name<span>/&gt;</span></a>
+        <ul id="nav-links">
+            <li><a href="#hero" class="active">Home</a></li>
+            <li><a href="#work">Work</a></li>
+            <li><a href="#more-work">More Work</a></li>
+            <li><a href="#data-engineering">Data Eng</a></li>
+            <li><a href="#process">Process</a></li>
+            <li><a href="#impact">Impact</a></li>
+            <li><a href="#about">About</a></li>
+            <li><a href="#contact">Contact</a></li>
+        </ul>
+        <button class="hamburger" id="hamburger" aria-label="Toggle navigation">
+            <span></span><span></span><span></span>
+        </button>
+    </div>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+    <div class="hero-content">
+        <div class="hero-badge">
+            <span class="dot"></span>
+            Open to conversations about data & AI product design
+        </div>
+        <h1>
+            Hi, I'm <span class="gradient">[Your Name]</span><br>
+            UX Designer — Data & AI Products
+        </h1>
+        <p class="tagline">I turn complex enterprise data into intuitive, trusted experiences. Bringing UX rigor to enterprise data and AI — findable, understandable, trustworthy.</p>
+        <div class="metric-badge">
+            <span class="number">~90%</span>
+            <span class="label">Reduction in user cognitive load<br>across enterprise reporting tools</span>
+        </div>
+        <br><br>
+        <div class="hero-buttons">
+            <a href="#work" class="btn btn-primary">View My Work</a>
+            <a href="#contact" class="btn btn-ghost">Get In Touch</a>
+        </div>
+
+        <div class="stats-bar">
+            <div class="stat-item">
+                <div class="stat-number">50,000+</div>
+                <div class="stat-desc">Users on redesigned products</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">~1,700 hrs/yr</div>
+                <div class="stat-desc">Saved via redesigns</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">99%</div>
+                <div class="stat-desc">Users stayed in-tool</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">2,600x</div>
+                <div class="stat-desc">Data distillation reduction</div>
+            </div>
+        </div>
+    </div>
+    <div class="hero-bg">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+    </div>
+</section>
+
+<!-- FEATURED WORK -->
+<section id="work">
+    <div class="section-label">Featured Work</div>
+    <div class="section-title">Case Studies</div>
+    <p class="section-subtitle">Problem &rarr; Approach &rarr; Outcome — three deep dives into enterprise data & AI product design.</p>
+
+    <!-- Case A -->
+    <div class="case-card case-a">
+        <div class="case-letter">A</div>
+        <h3>Enterprise BI Design System</h3>
+        <div class="case-grid">
+            <div>
+                <div class="case-block-label problem">Problem</div>
+                <p>Reporting tools across an enterprise BI platform each looked and behaved differently — forcing users to relearn every dashboard, driving high cognitive load, and pushing people to export to spreadsheets instead of trusting the tools.</p>
+            </div>
+            <div>
+                <div class="case-block-label approach">Approach</div>
+                <p>Led a cross-functional design initiative to create a company-first UX/UI standards guide and a reusable, copy-paste-ready component library. Formed and led a cross-team working group to co-create the standards and deployment framework.</p>
+            </div>
+            <div>
+                <div class="case-block-label outcome">Outcome</div>
+                <p>Transformed enterprise reporting with a unified design language.</p>
+                <div class="outcome-stats">
+                    <span class="outcome-stat">90% faster visual search (40s &rarr; 4s)</span>
+                    <span class="outcome-stat">~160 hrs/yr saved across 500+ users</span>
+                    <span class="outcome-stat">99% stayed in-tool</span>
+                </div>
+            </div>
+        </div>
+        <div class="tags">
+            <span class="tag">Design system</span>
+            <span class="tag">Component library</span>
+            <span class="tag">Accessibility</span>
+            <span class="tag">Governance</span>
+            <span class="tag">Cross-functional leadership</span>
+        </div>
+    </div>
+
+    <!-- Case B -->
+    <div class="case-card case-b">
+        <div class="case-letter">B</div>
+        <h3>Conversational Data-Discovery Assistant</h3>
+        <div class="case-grid">
+            <div>
+                <div class="case-block-label problem">Problem</div>
+                <p>Finding the right data meant a confusing 5-step hunt across catalogs, documentation, and subject-matter experts — a major bottleneck for self-service and new-employee onboarding.</p>
+            </div>
+            <div>
+                <div class="case-block-label approach">Approach</div>
+                <p>Designed a plain-English AI assistant that collapses the journey into 2 clear steps. Built around three user personas — specialist, occasional user, and newcomer — with responses that adapt to each. Grounded answers in approved sources.</p>
+            </div>
+            <div>
+                <div class="case-block-label outcome">Outcome</div>
+                <p>Established a scalable, governed "front door" model for data discovery.</p>
+                <div class="outcome-stats">
+                    <span class="outcome-stat">15-30 min &rarr; seconds</span>
+                    <span class="outcome-stat">Strong user-testing satisfaction</span>
+                    <span class="outcome-stat">3 adaptive personas</span>
+                </div>
+            </div>
+        </div>
+        <div class="tags">
+            <span class="tag">Conversational UX</span>
+            <span class="tag">Persona design</span>
+            <span class="tag">Adaptive responses</span>
+            <span class="tag">Usability testing</span>
+            <span class="tag">Governed AI</span>
+        </div>
+    </div>
+
+    <!-- Case C -->
+    <div class="case-card case-c">
+        <div class="case-letter">C</div>
+        <h3>AI Agent Experience (AIX) Standards</h3>
+        <div class="case-grid">
+            <div>
+                <div class="case-block-label problem">Problem</div>
+                <p>AI agents answered inconsistently, with no shared expectations for trust, sourcing, or error handling across the enterprise.</p>
+            </div>
+            <div>
+                <div class="case-block-label approach">Approach</div>
+                <p>Defined reusable standards for how agents respond — citations, confidence signals, follow-up behavior, conversation navigation, and error handling — plus guidance on when an agent should ask versus act. Built a reusable "agent UX kit" of patterns.</p>
+            </div>
+            <div>
+                <div class="case-block-label outcome">Outcome</div>
+                <p>A UX scorecard giving teams a repeatable bar for AI experience quality.</p>
+                <div class="outcome-stats">
+                    <span class="outcome-stat">Findability &amp; trust scorecard</span>
+                    <span class="outcome-stat">Reusable agent UX kit</span>
+                </div>
+            </div>
+        </div>
+        <div class="tags">
+            <span class="tag">AI UX standards</span>
+            <span class="tag">Trust &amp; citations</span>
+            <span class="tag">UX scorecard</span>
+            <span class="tag">Error handling</span>
+            <span class="tag">Reusable patterns</span>
+        </div>
+    </div>
+</section>
+
+<!-- MORE WORK -->
+<section id="more-work">
+    <div class="section-label">More Work</div>
+    <div class="section-title">Additional Projects</div>
+    <p class="section-subtitle">A selection of smaller but impactful projects across data, AI, and enterprise tools.</p>
+
+    <div class="more-work-grid">
+        <div class="work-card">
+            <h4>Legacy Platform Redesign &amp; Migration</h4>
+            <p>Redesigned a high-traffic reporting product used by 50,000+ people and led the full user migration off a legacy system.</p>
+            <div class="work-outcome"><strong>~1,700 hours/year saved</strong> through faster speed-to-insight; 100% user migration with average task time cut roughly in half.</div>
+            <div class="tags"><span class="tag">Redesign</span><span class="tag">Migration</span><span class="tag">Speed-to-insight</span></div>
+        </div>
+        <div class="work-card">
+            <h4>End-to-End Learning App Design</h4>
+            <p>Speced a full product with personalized onboarding, an AI chat assistant, and a gamified progress system to keep learners engaged.</p>
+            <div class="work-outcome">Concept-to-spec product design spanning onboarding, AI assistance, and engagement mechanics.</div>
+            <div class="tags"><span class="tag">Product design</span><span class="tag">Onboarding</span><span class="tag">Gamification</span><span class="tag">AI assistant</span></div>
+        </div>
+        <div class="work-card">
+            <h4>Reporting Consolidation</h4>
+            <p>Unified four separate reporting domains into one consolidated app, simplifying navigation for 20,000+ monthly users.</p>
+            <div class="tags"><span class="tag">Consolidation</span><span class="tag">Navigation</span><span class="tag">Enterprise</span></div>
+        </div>
+        <div class="work-card">
+            <h4>AI-Powered Summaries</h4>
+            <p>Partnered on an automated summary capability that cut manual analysis time by ~79% (~166 hours/year).</p>
+            <div class="work-outcome"><strong>~79% reduction</strong> in manual analysis time.</div>
+            <div class="tags"><span class="tag">AI summaries</span><span class="tag">Automation</span><span class="tag">Efficiency</span></div>
+        </div>
+        <div class="work-card">
+            <h4>Data Literacy Training</h4>
+            <p>Designed and delivered multi-cohort training, achieving 4.2/5 participant satisfaction.</p>
+            <div class="work-outcome"><strong>4.2 / 5</strong> participant satisfaction rating.</div>
+            <div class="tags"><span class="tag">Training</span><span class="tag">Enablement</span><span class="tag">Data literacy</span></div>
+        </div>
+        <div class="work-card">
+            <h4>Support Triage Redesign</h4>
+            <p>Reworked how questions and bugs were handled, returning ~23 hours of team capacity in the first month.</p>
+            <div class="work-outcome"><strong>~23 hours</strong> of team capacity returned in the first month.</div>
+            <div class="tags"><span class="tag">Process</span><span class="tag">Triage</span><span class="tag">Efficiency</span></div>
+        </div>
+    </div>
+</section>
+
+<!-- DATA ENGINEERING -->
+<section id="data-engineering">
+    <div class="section-label">Data Engineering</div>
+    <div class="section-title">Under the Hood</div>
+    <p class="section-subtitle">The pipelines, data models, and infrastructure beneath the experiences.</p>
+
+    <div class="de-grid">
+        <div class="de-card">
+            <div class="de-number">1</div>
+            <h4>Enterprise Data Publishing Pipeline</h4>
+            <p>Published platform data into the enterprise data lakehouse and its downstream reporting layer, making it subscribable and query-ready for analysts across business units.</p>
+            <div class="de-outcome"><strong>1.2M+ downstream views</strong> across ~56,000 users.</div>
+        </div>
+        <div class="de-card">
+            <div class="de-number">2</div>
+            <h4>Metadata Distillation Pipeline</h4>
+            <p>Built a pipeline that distilled hundreds of MB of raw notebooks into a compact, structured knowledge base — deduplicating, ranking tables, mapping join relationships, and extracting a domain glossary.</p>
+            <div class="de-outcome"><strong>~600 MB &rarr; ~230 KB</strong> (2,600x reduction). 860+ duplicates removed.</div>
+        </div>
+        <div class="de-card">
+            <div class="de-number">3</div>
+            <h4>Cloud Storage Architecture</h4>
+            <p>Re-architected attachment handling to offload large binary files into cloud object storage, serving them as lightweight links inside the lakehouse and BI reports.</p>
+            <div class="de-outcome">Reduced database bloat and enabled clean in-report file downloads.</div>
+        </div>
+        <div class="de-card">
+            <div class="de-number">4</div>
+            <h4>AI-Powered SQL Assistant</h4>
+            <p>Engineered a lightweight app that connects to the data catalog in real time, authenticates via SSO, ingests 2,800+ query patterns, and generates validated, executable SQL from plain English.</p>
+            <div class="de-outcome">Concept to working prototype in <strong>under 1 week</strong>. No hallucinated schemas.</div>
+        </div>
+        <div class="de-card">
+            <div class="de-number">5</div>
+            <h4>Data Catalog &amp; Metadata Governance</h4>
+            <p>Led curation of schema/table metadata and completeness — descriptions, ownership, stewardship, and access instructions — with measurable catalog-completeness scoring.</p>
+            <div class="de-outcome">More discoverable, more trustworthy data across the enterprise.</div>
+        </div>
+        <div class="de-card">
+            <div class="de-number">6</div>
+            <h4>Data Quality Standard &amp; Scoring</h4>
+            <p>Contributed to an enterprise data-quality standard — quality dimensions, scoring logic, rule thresholds, and a reporting model phased from pilot into a scaled, governed library.</p>
+            <div class="de-outcome">Repeatable, canonical way to measure and report data quality.</div>
+        </div>
+        <div class="de-card">
+            <div class="de-number">7</div>
+            <h4>Capacity Consolidation &amp; Cost Optimization</h4>
+            <p>Analyzed platform usage and recommended consolidation, eliminating duplicate workspaces and right-sizing compute.</p>
+            <div class="de-outcome">Estimated annual cost avoidance through infrastructure optimization.</div>
+        </div>
+        <div class="de-card">
+            <div class="de-number">8</div>
+            <h4>Dimensional Data Modeling &amp; SQL Enablement</h4>
+            <p>Designed and taught data-modeling foundations — fact vs. dimension tables, medallion architecture — and built SQL enablement content grounded in real, governed data.</p>
+            <div class="de-outcome">Faster analyst onboarding and stronger self-service.</div>
+        </div>
+    </div>
+
+    <div class="de-stats">
+        <div class="de-stats-row">
+            <span class="de-stat-value">1.2M+ views / ~56K users</span>
+            <span class="de-stat-desc">Reach of published pipeline data</span>
+        </div>
+        <div class="de-stats-row">
+            <span class="de-stat-value">~2,600x reduction</span>
+            <span class="de-stat-desc">Raw notebooks &rarr; distilled knowledge base</span>
+        </div>
+        <div class="de-stats-row">
+            <span class="de-stat-value">~5,900 tables / ~4,400 joins</span>
+            <span class="de-stat-desc">Mapped in the metadata layer</span>
+        </div>
+        <div class="de-stats-row">
+            <span class="de-stat-value">2,800+ query patterns</span>
+            <span class="de-stat-desc">Ingested to ground the SQL assistant</span>
+        </div>
+        <div class="de-stats-row">
+            <span class="de-stat-value">860+ duplicates removed</span>
+            <span class="de-stat-desc">Deduplication in the distillation pipeline</span>
+        </div>
+        <div class="de-stats-row">
+            <span class="de-stat-value">&lt; 1 week</span>
+            <span class="de-stat-desc">Concept-to-prototype for the SQL assistant</span>
+        </div>
+    </div>
+</section>
+
+<!-- PROCESS / SKILLS -->
+<section id="process">
+    <div class="section-label">Process &amp; Toolkit</div>
+    <div class="section-title">How I Work</div>
+    <p class="section-subtitle">UX methods, tools, and technical fluency.</p>
+
+    <div class="skills-grid">
+        <div class="skill-group">
+            <h4><span class="icon" style="background:rgba(108,99,255,0.15);color:var(--accent-light)">&#9733;</span> UX &amp; Research</h4>
+            <div class="skill-chips">
+                <span class="skill-chip">Persona development</span>
+                <span class="skill-chip">Stakeholder interviews</span>
+                <span class="skill-chip">Usability testing</span>
+                <span class="skill-chip">CSAT / SUS measurement</span>
+                <span class="skill-chip">Journey mapping</span>
+                <span class="skill-chip">A/B experimentation</span>
+                <span class="skill-chip">WCAG accessibility</span>
+            </div>
+        </div>
+        <div class="skill-group">
+            <h4><span class="icon" style="background:rgba(34,211,238,0.15);color:var(--cyan)">&#9632;</span> Design Systems</h4>
+            <div class="skill-chips">
+                <span class="skill-chip">Component libraries</span>
+                <span class="skill-chip">UX/UI standards</span>
+                <span class="skill-chip">Design governance</span>
+                <span class="skill-chip">Brand consistency</span>
+            </div>
+        </div>
+        <div class="skill-group">
+            <h4><span class="icon" style="background:rgba(244,114,182,0.15);color:var(--rose)">&#10024;</span> Data &amp; AI Product Design</h4>
+            <div class="skill-chips">
+                <span class="skill-chip">Conversational UX</span>
+                <span class="skill-chip">AI agent experience</span>
+                <span class="skill-chip">Adaptive responses</span>
+                <span class="skill-chip">Trust &amp; citation design</span>
+                <span class="skill-chip">Data-discovery UX</span>
+            </div>
+        </div>
+        <div class="skill-group">
+            <h4><span class="icon" style="background:rgba(251,191,36,0.15);color:var(--amber)">&#9881;</span> Technical</h4>
+            <div class="skill-chips">
+                <span class="skill-chip">Enterprise BI (DAX/M)</span>
+                <span class="skill-chip">SQL / Lakehouse</span>
+                <span class="skill-chip">Python</span>
+                <span class="skill-chip">Prototyping</span>
+                <span class="skill-chip">Agile / Scrum</span>
+            </div>
+        </div>
+        <div class="skill-group">
+            <h4><span class="icon" style="background:rgba(52,211,153,0.15);color:var(--green)">&#9881;</span> Data Engineering</h4>
+            <div class="skill-chips">
+                <span class="skill-chip">Lakehouse ingestion</span>
+                <span class="skill-chip">Metadata pipelines</span>
+                <span class="skill-chip">Medallion architecture</span>
+                <span class="skill-chip">Cloud storage</span>
+                <span class="skill-chip">RAG / semantic layers</span>
+                <span class="skill-chip">Data quality scoring</span>
+                <span class="skill-chip">Catalog governance</span>
+            </div>
+        </div>
+        <div class="skill-group">
+            <h4><span class="icon" style="background:rgba(108,99,255,0.15);color:var(--accent-light)">&#9733;</span> Leadership &amp; Enablement</h4>
+            <div class="skill-chips">
+                <span class="skill-chip">Cross-functional facilitation</span>
+                <span class="skill-chip">Training design &amp; delivery</span>
+                <span class="skill-chip">Mentoring</span>
+                <span class="skill-chip">Stakeholder alignment</span>
+                <span class="skill-chip">Storytelling for leadership</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- IMPACT -->
+<section id="impact">
+    <div class="section-label">Impact</div>
+    <div class="section-title">Metrics That Matter</div>
+
+    <div class="metrics-band">
+        <div class="metrics-grid">
+            <div class="metric-item">
+                <div class="metric-val">~90%</div>
+                <div class="metric-desc">Reduction in visual search time<br>(40s &rarr; 4s)</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-val">50,000+</div>
+                <div class="metric-desc">Users on redesigned<br>reporting products</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-val">~1,700</div>
+                <div class="metric-desc">Hours/year saved via<br>legacy platform redesign</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-val">~160</div>
+                <div class="metric-desc">Hours/year saved across<br>500+ users</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-val">99%</div>
+                <div class="metric-desc">Users stayed in-tool<br>instead of spreadsheets</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-val">~79%</div>
+                <div class="metric-desc">Reduction in manual<br>analysis time</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-val">4.2/5</div>
+                <div class="metric-desc">Data literacy training<br>satisfaction</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-val">2,600x</div>
+                <div class="metric-desc">Data distillation<br>reduction factor</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ABOUT -->
+<section id="about">
+    <div class="section-label">About</div>
+    <div class="section-title">About Me</div>
+
+    <div class="about-grid">
+        <div class="about-text">
+            <p>I'm a UX designer specializing in data and AI products at a Fortune 50 consumer goods company. I work at the intersection of complex systems and everyday users — turning dense data platforms and AI agents into interfaces people actually understand and trust.</p>
+            <p>My focus is reducing friction, building shared design standards, and proving impact with real usability metrics.</p>
+            <div class="bio-long">
+                <p>Over the past several years I've led how a large R&amp;D organization designs, interprets, and scales its data experiences. I've built enterprise UX/UI standards and reusable component libraries, redesigned high-traffic reporting products used by tens of thousands of people, and designed a conversational data-discovery assistant that collapses a multi-step data hunt into seconds.</p>
+                <p>I pair user research and usability testing with a strong bias toward measurable business value — speed-to-insight, adoption, and reduced cognitive load.</p>
+            </div>
+        </div>
+        <div>
+            <h3 style="font-size:1.1rem;margin-bottom:1rem;">Recognition &amp; Credentials</h3>
+            <ul class="recognition-list">
+                <li>
+                    <span class="rec-icon">&#9733;</span>
+                    <span class="rec-text"><strong>Leadership award</strong> for driving UX/design transformation, received from senior leadership.</span>
+                </li>
+                <li>
+                    <span class="rec-icon">&#127942;</span>
+                    <span class="rec-text">Design work <strong>recognized at a global UX summit</strong> as an enterprise standard.</span>
+                </li>
+                <li>
+                    <span class="rec-icon">&#127891;</span>
+                    <span class="rec-text"><strong>UX community-of-practice certification</strong> / Data Visualization certified.</span>
+                </li>
+                <li>
+                    <span class="rec-icon">&#128101;</span>
+                    <span class="rec-text">Repeated <strong>cross-functional leadership</strong> presenting at organizational and data-community events.</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact">
+    <div class="section-label">Contact</div>
+    <div class="section-title">Let's Connect</div>
+
+    <div class="contact-card">
+        <p class="cta-line">Let's build something clear. Open to conversations about data &amp; AI product design, design systems, and AI experience standards.</p>
+        <div class="contact-links">
+            <a href="mailto:[email]" class="contact-link">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                [email]
+            </a>
+            <a href="[LinkedIn URL]" class="contact-link" target="_blank" rel="noopener">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+                LinkedIn
+            </a>
+        </div>
+    </div>
+</section>
+
+<footer>
+    &copy; [Your Name] &mdash; All work genericized for public portfolio.
+</footer>
+
+<script>
+    // Mobile nav toggle
+    document.getElementById('hamburger').addEventListener('click', function() {
+        document.getElementById('nav-links').classList.toggle('open');
+    });
+
+    // Close mobile nav on link click
+    document.querySelectorAll('#nav-links a').forEach(function(link) {
+        link.addEventListener('click', function() {
+            document.getElementById('nav-links').classList.remove('open');
+        });
+    });
+
+    // Active nav highlighting on scroll
+    const sections = document.querySelectorAll('section');
+    const navLinks = document.querySelectorAll('#nav-links a');
+    window.addEventListener('scroll', function() {
+        let current = '';
+        sections.forEach(function(section) {
+            const top = section.offsetTop - 100;
+            if (window.scrollY >= top) current = section.getAttribute('id');
+        });
+        navLinks.forEach(function(link) {
+            link.classList.remove('active');
+            if (link.getAttribute('href') === '#' + current) link.classList.add('active');
+        });
+    });
+</script>
+</body>
+</html>
