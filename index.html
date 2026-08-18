@@ -103,6 +103,36 @@
             margin-bottom: 3rem; line-height: 1.65;
         }
 
+        /* NOW */
+        .now-lead {
+            font-family: var(--display); font-size: clamp(1.3rem, 2.6vw, 1.85rem);
+            font-weight: 500; line-height: 1.4; letter-spacing: -0.01em;
+            max-width: 760px; margin-bottom: 2.75rem;
+        }
+        .now-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 0; border-top: 1px solid var(--rule);
+        }
+        .now-item {
+            padding: 1.5rem 1.5rem 1.5rem 0;
+            border-bottom: 1px solid var(--rule);
+        }
+        .now-item + .now-item { border-left: 1px solid var(--rule); padding-left: 1.5rem; }
+        .now-kicker {
+            font-family: var(--label); font-size: 0.68rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.12em; color: var(--accent);
+            margin-bottom: 0.6rem;
+        }
+        .now-item p { color: var(--text-dim); line-height: 1.6; font-size: 0.98rem; }
+        .now-stamp {
+            font-family: var(--label); font-size: 0.68rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-dim);
+            margin-top: 2rem;
+        }
+        @media (max-width: 620px) {
+            .now-item + .now-item { border-left: none; padding-left: 0; }
+        }
+
         /* HERO */
         #hero {
             min-height: 100vh; display: flex; align-items: center;
@@ -725,6 +755,7 @@
             <li><a href="#process">Process</a></li>
             <li><a href="#impact">Impact</a></li>
             <li><a href="#about">About</a></li>
+            <li><a href="#now">Now</a></li>
             <li><a href="#book">Work With Me</a></li>
             <li><a href="#contact">Contact</a></li>
         </ul>
@@ -1187,6 +1218,29 @@
             </div>
         </div>
     </div>
+</section>
+
+<!-- NOW -->
+<section id="now">
+    <div class="section-label">Now</div>
+    <div class="section-title">What I'm Working On</div>
+    <p class="now-lead">A short account of where my attention presently rests, kept current rather than comprehensive.</p>
+
+    <div class="now-grid">
+        <div class="now-item">
+            <div class="now-kicker">Building</div>
+            <p>Deepening my practice in agentic prototyping, moving from concept to working system in days by having AI agents assist directly in the engineering, and studying where that speed helps and where it must be held in check.</p>
+        </div>
+        <div class="now-item">
+            <div class="now-kicker">Studying</div>
+            <p>Retrieval-augmented grounding and the discipline of context engineering, the work of giving an AI system a compact, trustworthy body of knowledge so that its answers rest on real sources rather than invention.</p>
+        </div>
+        <div class="now-item">
+            <div class="now-kicker">Learning</div>
+            <p>Completing a Generative AI specialization through the University of Colorado Boulder, and reading widely on how trust, citation, and uncertainty ought to be expressed within an AI experience.</p>
+        </div>
+    </div>
+    <div class="now-stamp">Last revised August 2026</div>
 </section>
 
 <!-- WORK WITH ME -->
