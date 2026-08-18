@@ -433,6 +433,19 @@
         }
         .curriculum-formats span { color: var(--text-dim); font-size: 0.82rem; }
         .curriculum-formats strong { color: var(--text); }
+        .feedback-band {
+            margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border);
+        }
+        .feedback-scores { display: flex; flex-wrap: wrap; gap: 2rem; margin-bottom: 1.25rem; }
+        .feedback-score .fs-num { font-size: 1.7rem; font-weight: 800; color: var(--green); line-height: 1; }
+        .feedback-score .fs-label { font-size: 0.78rem; color: var(--text-dim); margin-top: 0.3rem; }
+        .quote-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; }
+        .quote {
+            background: var(--surface-2); border: 1px solid var(--border); border-left: 3px solid var(--accent);
+            border-radius: 8px; padding: 1rem 1.2rem;
+        }
+        .quote p { color: var(--text); font-size: 0.85rem; font-style: italic; line-height: 1.55; margin: 0; }
+        .quote .attr { color: var(--text-dim); font-size: 0.74rem; font-style: normal; margin-top: 0.5rem; }
 
         /* CONTACT */
         #contact { text-align: center; }
@@ -1032,6 +1045,37 @@
             <span><strong>Formats:</strong> half-day intensive &middot; multi-week cohort &middot; train-the-trainer</span>
             <span><strong>Audience:</strong> analysts, scientists &amp; business users</span>
             <span><strong>Delivery:</strong> virtual or in-person</span>
+        </div>
+
+        <div class="feedback-band">
+            <div class="feedback-scores">
+                <div class="feedback-score">
+                    <div class="fs-num">4.48<span style="font-size:0.9rem;color:var(--text-dim)">/5</span></div>
+                    <div class="fs-label">Avg. trainer rating</div>
+                </div>
+                <div class="feedback-score">
+                    <div class="fs-num">4.31<span style="font-size:0.9rem;color:var(--text-dim)">/5</span></div>
+                    <div class="fs-label">Avg. module rating</div>
+                </div>
+                <div class="feedback-score">
+                    <div class="fs-num">52</div>
+                    <div class="fs-label">Participant responses</div>
+                </div>
+            </div>
+            <div class="quote-grid">
+                <div class="quote">
+                    <p>&ldquo;Patient, knowledgeable, and engaging throughout.&rdquo;</p>
+                    <div class="attr">&mdash; Workshop participant</div>
+                </div>
+                <div class="quote">
+                    <p>&ldquo;The content was powerful and eye-opening.&rdquo;</p>
+                    <div class="attr">&mdash; Workshop participant</div>
+                </div>
+                <div class="quote">
+                    <p>&ldquo;The helpers and coaches were very attentive and supportive.&rdquo;</p>
+                    <div class="attr">&mdash; Workshop participant</div>
+                </div>
+            </div>
         </div>
     </div>
 </section>
