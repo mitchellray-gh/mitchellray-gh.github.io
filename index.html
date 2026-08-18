@@ -1,16 +1,16 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mitchell Ray — Data & AI Product Builder | Architecture, Engineering & UX</title>
+    <title>Mitchell Ray - Data & AI Product Builder | Architecture, Engineering & UX</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700;9..144,900&family=Inter:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap');
         :root {
             --bg: #f4f1ea;
             --surface: #ffffff;
             --surface-2: #faf7f0;
-            --border: #e2ddd1;
+            --border: #d8d2c4;
             --rule: #1a1815;
             --text: #1a1815;
             --text-dim: #6f685b;
@@ -22,9 +22,11 @@
             --rose: #c2185b;
             --cyan: #1f6f8b;
             --font: 'Inter', system-ui, -apple-system, sans-serif;
-            --display: 'Fraunces', Georgia, 'Times New Roman', serif;
+            --display: 'Archivo', 'Helvetica Neue', Helvetica, Arial, sans-serif;
             --mono: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
         }
+
+        body { counter-reset: section; }
 
         *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -79,17 +81,25 @@
         section { padding: 6rem 2rem; max-width: 1200px; margin: 0 auto; }
 
         .section-label {
-            font-size: 0.68rem; font-weight: 600; letter-spacing: 3.5px;
-            text-transform: uppercase; color: var(--accent); margin-bottom: 1.1rem;
-            display: inline-block; border-top: 2px solid var(--accent); padding-top: 0.5rem;
+            font-family: var(--display);
+            font-size: 0.72rem; font-weight: 700; letter-spacing: 0.5px;
+            text-transform: uppercase; color: var(--text); margin-bottom: 1.1rem;
+            display: flex; align-items: baseline; gap: 0.6rem;
+            border-top: 3px solid var(--rule); padding-top: 0.6rem;
+        }
+        .section-label::before {
+            counter-increment: section;
+            content: "\00A7 " counter(section, decimal-leading-zero);
+            color: var(--accent); font-weight: 800; letter-spacing: 0;
         }
         .section-title {
-            font-family: var(--display); font-size: clamp(2rem, 4vw, 2.9rem); font-weight: 600;
-            letter-spacing: -0.02em; line-height: 1.05; margin-bottom: 1rem;
+            font-family: var(--display); font-size: clamp(2.2rem, 5vw, 3.6rem); font-weight: 800;
+            letter-spacing: -0.03em; line-height: 0.98; margin-bottom: 1rem;
+            text-transform: none;
         }
         .section-subtitle {
             color: var(--text-dim); font-size: 1.05rem; max-width: 620px;
-            margin-bottom: 3rem; line-height: 1.7;
+            margin-bottom: 3rem; line-height: 1.65;
         }
 
         /* HERO */
@@ -97,7 +107,26 @@
             min-height: 100vh; display: flex; align-items: center;
             padding-top: 60px; position: relative;
         }
-        #hero .hero-content { max-width: 720px; }
+        #hero .hero-content { max-width: 780px; }
+        .masthead {
+            display: flex; flex-wrap: wrap; gap: 0 2rem; align-items: center;
+            border-top: 3px solid var(--rule); border-bottom: 1px solid var(--rule);
+            padding: 0.5rem 0; margin-bottom: 2.25rem;
+            font-family: var(--display); font-size: 0.68rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.12em; color: var(--text);
+        }
+        .masthead span:not(:last-child)::after {
+            content: ""; display: inline-block;
+        }
+        .masthead span { position: relative; padding-right: 2rem; }
+        .masthead span:not(:last-child)::before {
+            content: "/"; position: absolute; right: 0.75rem; color: var(--accent);
+        }
+        #hero h1 .eyebrow {
+            display: block; font-family: var(--display); font-size: clamp(1rem, 2.2vw, 1.4rem);
+            font-weight: 700; letter-spacing: 0.02em; text-transform: uppercase;
+            color: var(--text-dim); margin-bottom: 0.6rem;
+        }
         #hero .hero-badge {
             display: inline-flex; align-items: center; gap: 0.5rem;
             background: transparent; border: 1px solid var(--rule);
@@ -114,12 +143,13 @@
             50% { opacity: 0.4; }
         }
         #hero h1 {
-            font-family: var(--display); font-size: clamp(2.8rem, 7vw, 4.6rem); font-weight: 600;
-            line-height: 1.02; margin-bottom: 1.25rem; letter-spacing: -0.03em;
+            font-family: var(--display); font-size: clamp(3rem, 8vw, 5.5rem); font-weight: 800;
+            line-height: 0.92; margin-bottom: 1.25rem; letter-spacing: -0.045em;
+            text-transform: uppercase;
         }
         #hero h1 .gradient {
-            font-style: italic; color: var(--accent);
-            -webkit-text-fill-color: var(--accent);
+            font-style: normal; color: var(--accent);
+            -webkit-text-fill-color: var(--accent); display: block;
         }
         #hero .tagline {
             font-size: 1.15rem; color: var(--text-dim); margin-bottom: 2rem;
@@ -357,7 +387,7 @@
         }
         .about-portrait img {
             width: 104px; height: 104px; border-radius: 0; object-fit: cover;
-            border: 1px solid var(--rule); filter: grayscale(1) contrast(1.05);
+            border: 1px solid var(--rule); box-shadow: 6px 6px 0 var(--accent);
             flex-shrink: 0;
         }
         .about-portrait .portrait-name { font-family: var(--display); font-size: 1.25rem; font-weight: 600; color: var(--text); }
@@ -534,15 +564,21 @@
 <!-- HERO -->
 <section id="hero">
     <div class="hero-content">
+        <div class="masthead">
+            <span>Capabilities Report</span>
+            <span>No. 01</span>
+            <span>Cincinnati, OH</span>
+            <span>Data / AI / UX</span>
+        </div>
         <div class="hero-badge">
             <span class="dot"></span>
-            Greater Cincinnati · Open to conversations about data & AI product design
+            Greater Cincinnati &middot; Open to conversations about data &amp; AI product design
         </div>
         <h1>
-            Hi, I'm <span class="gradient">Mitchell Ray</span><br>
-            Data & AI Product Builder
+            <span class="eyebrow">Mitchell Ray</span>
+            <span class="gradient">Data &amp; AI<br>Product Builder</span>
         </h1>
-        <p class="tagline">I architect the data, engineer the intelligence, and design the UX. One person across the full stack &mdash; from lakehouse pipelines, data models, and RAG systems underneath to the intuitive, governed interfaces on top. Data &amp; AI products that are findable, understandable, and trustworthy.</p>
+        <p class="tagline">I architect the data, engineer the intelligence, and design the UX. One person across the full stack, from lakehouse pipelines, data models, and RAG systems underneath to the intuitive, governed interfaces on top. Data &amp; AI products that are findable, understandable, and trustworthy.</p>
         <div class="metric-badge">
             <span class="number">~90%</span>
             <span class="label">Reduction in user cognitive load<br>across enterprise reporting tools</span>
@@ -586,7 +622,7 @@
 <section id="work">
     <div class="section-label">Featured Work</div>
     <div class="section-title">Case Studies</div>
-    <p class="section-subtitle">Problem &rarr; Approach &rarr; Outcome — three deep dives spanning the full stack, from data architecture to the interface.</p>
+    <p class="section-subtitle">Problem &rarr; Approach &rarr; Outcome - three deep dives spanning the full stack, from data architecture to the interface.</p>
 
     <!-- Case A -->
     <div class="case-card case-a">
@@ -595,11 +631,11 @@
         <div class="case-grid">
             <div>
                 <div class="case-block-label problem">Problem</div>
-                <p>Reporting tools across an enterprise BI platform each looked and behaved differently — forcing users to relearn every dashboard, driving high cognitive load, and pushing people to export to spreadsheets instead of trusting the tools.</p>
+                <p>Reporting tools across an enterprise BI platform each looked and behaved differently - forcing users to relearn every dashboard, driving high cognitive load, and pushing people to export to spreadsheets instead of trusting the tools.</p>
             </div>
             <div>
                 <div class="case-block-label approach">Approach</div>
-                <p>Authored a company-first Power BI UX/UI standards guide plus a copy-paste-ready (Ctrl+C / Ctrl+V) component library that supplements the enterprise UX community of excellence and global design system. Defined a 12-column &times; 6-row anchoring grid (91px columns, 78px rows, 18px margins), a Segoe UI type scale, WCAG AA/AAA color pairings with documented contrast ratios, Google Material iconography (18/24px), and reusable primary/secondary headers, footers, filter panels, cards, tables, and graphs &mdash; even a governed Copilot narrative-summary pattern. Led a cross-team working group to co-create and deploy it.</p>
+                <p>Authored a company-first Power BI UX/UI standards guide plus a copy-paste-ready (Ctrl+C / Ctrl+V) component library that supplements the enterprise UX community of excellence and global design system. Defined a 12-column &times; 6-row anchoring grid (91px columns, 78px rows, 18px margins), a Segoe UI type scale, WCAG AA/AAA color pairings with documented contrast ratios, Google Material iconography (18/24px), and reusable primary/secondary headers, footers, filter panels, cards, tables, and graphs - even a governed Copilot narrative-summary pattern. Led a cross-team working group to co-create and deploy it.</p>
             </div>
             <div>
                 <div class="case-block-label outcome">Outcome</div>
@@ -629,11 +665,11 @@
         <div class="case-grid">
             <div>
                 <div class="case-block-label problem">Problem</div>
-                <p>Finding the right data meant a confusing 5-step hunt across catalogs, documentation, and subject-matter experts — a major bottleneck for self-service and new-employee onboarding.</p>
+                <p>Finding the right data meant a confusing 5-step hunt across catalogs, documentation, and subject-matter experts - a major bottleneck for self-service and new-employee onboarding.</p>
             </div>
             <div>
                 <div class="case-block-label approach">Approach</div>
-                <p>Designed a plain-English AI assistant that collapses the journey into 2 clear steps. Built around three user personas — specialist, occasional user, and newcomer — with responses that adapt to each. Grounded answers in approved sources.</p>
+                <p>Designed a plain-English AI assistant that collapses the journey into 2 clear steps. Built around three user personas - specialist, occasional user, and newcomer - with responses that adapt to each. Grounded answers in approved sources.</p>
             </div>
             <div>
                 <div class="case-block-label outcome">Outcome</div>
@@ -665,7 +701,7 @@
             </div>
             <div>
                 <div class="case-block-label approach">Approach</div>
-                <p>Defined reusable standards for how agents respond — citations, confidence signals, follow-up behavior, conversation navigation, and error handling — plus guidance on when an agent should ask versus act. Built a reusable "agent UX kit" of patterns.</p>
+                <p>Defined reusable standards for how agents respond - citations, confidence signals, follow-up behavior, conversation navigation, and error handling - plus guidance on when an agent should ask versus act. Built a reusable "agent UX kit" of patterns.</p>
             </div>
             <div>
                 <div class="case-block-label outcome">Outcome</div>
@@ -730,7 +766,7 @@
         </div>
         <div class="work-card">
             <h4>Governed Copilot Narrative Summaries</h4>
-            <p>Defined a reusable pattern for embedding AI narrative-summary visuals in reports &mdash; natural-language insights that update live with filters, with best-practice placement, scoping, and accuracy-review guidance for non-technical stakeholders.</p>
+            <p>Defined a reusable pattern for embedding AI narrative-summary visuals in reports - natural-language insights that update live with filters, with best-practice placement, scoping, and accuracy-review guidance for non-technical stakeholders.</p>
             <div class="work-outcome">A trustworthy, standardized way to surface AI-generated insight at the top of enterprise dashboards.</div>
             <div class="tags"><span class="tag">AI / Copilot</span><span class="tag">Narrative insight</span><span class="tag">Governance</span></div>
         </div>
@@ -741,7 +777,7 @@
 <section id="data-engineering">
     <div class="section-label">Data Engineering & Architecture</div>
     <div class="section-title">Under the Hood</div>
-    <p class="section-subtitle">I don't just design on top of the data &mdash; I architect it. Medallion lakehouse pipelines, dimensional &amp; canonical data models, cloud-storage architecture, governed catalogs, and RAG/semantic layers that power the experiences above.</p>
+    <p class="section-subtitle">I don't just design on top of the data - I architect it. Medallion lakehouse pipelines, dimensional &amp; canonical data models, cloud-storage architecture, governed catalogs, and RAG/semantic layers that power the experiences above.</p>
 
     <div class="de-grid">
         <div class="de-card">
@@ -753,7 +789,7 @@
         <div class="de-card">
             <div class="de-number">2</div>
             <h4>Metadata Distillation Pipeline</h4>
-            <p>Built a pipeline that distilled hundreds of MB of raw notebooks into a compact, structured knowledge base — deduplicating, ranking tables, mapping join relationships, and extracting a domain glossary.</p>
+            <p>Built a pipeline that distilled hundreds of MB of raw notebooks into a compact, structured knowledge base - deduplicating, ranking tables, mapping join relationships, and extracting a domain glossary.</p>
             <div class="de-outcome"><strong>~600 MB &rarr; ~230 KB</strong> (2,600x reduction). 860+ duplicates removed.</div>
         </div>
         <div class="de-card">
@@ -771,13 +807,13 @@
         <div class="de-card">
             <div class="de-number">5</div>
             <h4>Data Catalog &amp; Metadata Governance</h4>
-            <p>Led curation of schema/table metadata and completeness — descriptions, ownership, stewardship, and access instructions — with measurable catalog-completeness scoring.</p>
+            <p>Led curation of schema/table metadata and completeness - descriptions, ownership, stewardship, and access instructions - with measurable catalog-completeness scoring.</p>
             <div class="de-outcome">More discoverable, more trustworthy data across the enterprise.</div>
         </div>
         <div class="de-card">
             <div class="de-number">6</div>
             <h4>Data Quality Standard &amp; Scoring</h4>
-            <p>Contributed to an enterprise data-quality standard — quality dimensions, scoring logic, rule thresholds, and a reporting model phased from pilot into a scaled, governed library.</p>
+            <p>Contributed to an enterprise data-quality standard - quality dimensions, scoring logic, rule thresholds, and a reporting model phased from pilot into a scaled, governed library.</p>
             <div class="de-outcome">Repeatable, canonical way to measure and report data quality.</div>
         </div>
         <div class="de-card">
@@ -789,7 +825,7 @@
         <div class="de-card">
             <div class="de-number">8</div>
             <h4>Dimensional Data Modeling &amp; SQL Enablement</h4>
-            <p>Designed and taught data-modeling foundations — fact vs. dimension tables, medallion architecture — and built SQL enablement content grounded in real, governed data.</p>
+            <p>Designed and taught data-modeling foundations - fact vs. dimension tables, medallion architecture - and built SQL enablement content grounded in real, governed data.</p>
             <div class="de-outcome">Faster analyst onboarding and stronger self-service.</div>
         </div>
     </div>
@@ -826,7 +862,7 @@
 <section id="process">
     <div class="section-label">Process &amp; Toolkit</div>
     <div class="section-title">How I Work</div>
-    <p class="section-subtitle">From user research and design systems to lakehouse engineering and RAG — the full toolkit I bring to data &amp; AI products.</p>
+    <p class="section-subtitle">From user research and design systems to lakehouse engineering and RAG - the full toolkit I bring to data &amp; AI products.</p>
 
     <div class="skills-grid">
         <div class="skill-group">
@@ -953,11 +989,11 @@
                     <div class="portrait-loc">Greater Cincinnati, OH</div>
                 </div>
             </div>
-            <p>I'm a data &amp; AI product builder working on data and AI products at a Fortune 50 consumer goods company, where I've spent 7+ years and was promoted into a research specialist role. I don't fit neatly in one box &mdash; I architect the data pipelines and models, engineer the AI and RAG systems on top, and design the UX that makes it all usable. I work end-to-end, from raw source data to the interface people actually trust.</p>
+            <p>I'm a data &amp; AI product builder working on data and AI products at a Fortune 50 consumer goods company, where I've spent 7+ years and was promoted into a research specialist role. I don't fit neatly in one box - I architect the data pipelines and models, engineer the AI and RAG systems on top, and design the UX that makes it all usable. I work end-to-end, from raw source data to the interface people actually trust.</p>
             <p>I'm equally at home in a medallion lakehouse designing dimensional models, publishing governed data, and engineering RAG/semantic layers, as I am running usability tests and building design systems. That full-stack range is the point: I can own a data &amp; AI product from architecture to experience and prove its impact with real metrics.</p>
             <div class="bio-long">
                 <p>Over the past several years I've led how a large R&amp;D organization designs, interprets, and scales its data experiences. I've built enterprise UX/UI standards and reusable component libraries, redesigned high-traffic reporting products used by tens of thousands of people, and designed a conversational data-discovery assistant that collapses a multi-step data hunt into seconds.</p>
-                <p>I pair user research and usability testing with a strong bias toward measurable business value — speed-to-insight, adoption, and reduced cognitive load. I hold a B.S. in Environmental Science with a Data Analytics concentration (Summa Cum Laude), and I'm a certified Professional Scrum Product Owner (PSPO&nbsp;I).</p>
+                <p>I pair user research and usability testing with a strong bias toward measurable business value - speed-to-insight, adoption, and reduced cognitive load. I hold a B.S. in Environmental Science with a Data Analytics concentration (Summa Cum Laude), and I'm a certified Professional Scrum Product Owner (PSPO&nbsp;I).</p>
             </div>
         </div>
         <div>
@@ -973,7 +1009,7 @@
                 </li>
                 <li>
                     <span class="rec-icon">&#127891;</span>
-                    <span class="rec-text"><strong>B.S. Environmental Science, Data Analytics concentration</strong> — Summa Cum Laude.</span>
+                    <span class="rec-text"><strong>B.S. Environmental Science, Data Analytics concentration</strong> - Summa Cum Laude.</span>
                 </li>
                 <li>
                     <span class="rec-icon">&#9989;</span>
@@ -987,11 +1023,11 @@
 
             <h3 style="font-size:1.1rem;margin:2rem 0 1rem;">Certifications</h3>
             <div class="cert-badges">
-                <span class="cert-badge">PSPO&nbsp;I &mdash; Professional Scrum Product Owner</span>
-                <span class="cert-badge">Power BI &mdash; Data-Driven Decisions</span>
+                <span class="cert-badge">PSPO&nbsp;I - Professional Scrum Product Owner</span>
+                <span class="cert-badge">Power BI - Data-Driven Decisions</span>
                 <span class="cert-badge">Data Visualization Certified</span>
                 <span class="cert-badge">Business Writing Certified</span>
-                <span class="cert-badge cert-progress">Generative AI (CU Boulder) &mdash; in progress</span>
+                <span class="cert-badge cert-progress">Generative AI (CU Boulder) - in progress</span>
             </div>
         </div>
     </div>
@@ -1001,7 +1037,7 @@
 <section id="book">
     <div class="section-label">Work With Me</div>
     <div class="section-title">Consulting &amp; Corporate Training</div>
-    <p class="section-subtitle">Available for select engagements &mdash; from advising on data &amp; AI product strategy to running hands-on training for your team.</p>
+    <p class="section-subtitle">Available for select engagements - from advising on data &amp; AI product strategy to running hands-on training for your team.</p>
 
     <div class="book-grid">
         <a class="book-card" href="mailto:mitchray1999@gmail.com?subject=Consulting%20Inquiry%20%E2%80%94%20Data%20%26%20AI%20Product%20Design&amp;body=Hi%20Mitchell%2C%0A%0AI%27d%20like%20to%20talk%20about%20a%20consulting%20engagement.%0A%0AOrganization%3A%0AProject%2Fgoal%3A%0ATimeline%3A%0ABudget%20range%3A%0A%0AThanks%21">
@@ -1023,12 +1059,12 @@
             <h3>Signature Workshop: Data Activation Fundamentals</h3>
             <span class="pill">Flagship training</span>
         </div>
-        <p class="lead">A hands-on, six-module program that takes any team from a business problem all the way to a polished, shareable report &mdash; business problem &rarr; data model &rarr; analysis &rarr; visualization &rarr; sharing. No coding or statistics background required; if you've ever linked data in a spreadsheet, you already understand the core ideas. Every module follows the same rhythm: <strong style="color:var(--text)">Concept &rarr; Hands-on &rarr; Apply &rarr; Reflect</strong> &mdash; outcome-driven, not lecture-driven, so participants leave able to solve a real problem.</p>
+        <p class="lead">A hands-on, six-module program that takes any team from a business problem all the way to a polished, shareable report - business problem &rarr; data model &rarr; analysis &rarr; visualization &rarr; sharing. No coding or statistics background required; if you've ever linked data in a spreadsheet, you already understand the core ideas. Every module follows the same rhythm: <strong style="color:var(--text)">Concept &rarr; Hands-on &rarr; Apply &rarr; Reflect</strong> - outcome-driven, not lecture-driven, so participants leave able to solve a real problem.</p>
         <div class="module-grid">
             <div class="module">
                 <span class="mod-num">1</span>
                 <h4>Data Models at Scale</h4>
-                <p>Relational databases, star schemas, fact vs. dimension tables, and primary/foreign keys &mdash; taught with an unplugged "human data model" exercise that makes relationships click before anyone touches a tool.</p>
+                <p>Relational databases, star schemas, fact vs. dimension tables, and primary/foreign keys - taught with an unplugged "human data model" exercise that makes relationships click before anyone touches a tool.</p>
             </div>
             <div class="module">
                 <span class="mod-num">2</span>
@@ -1038,17 +1074,17 @@
             <div class="module">
                 <span class="mod-num">3</span>
                 <h4>Connecting, Cleaning &amp; Transforming</h4>
-                <p>Where data should live, connecting to new sources, and cleaning responsibly &mdash; nulls vs. real blanks, data types, repeatable transformation steps, and the ethics of cleaning without misleading.</p>
+                <p>Where data should live, connecting to new sources, and cleaning responsibly - nulls vs. real blanks, data types, repeatable transformation steps, and the ethics of cleaning without misleading.</p>
             </div>
             <div class="module">
                 <span class="mod-num">4</span>
                 <h4>Accessing Enterprise Data with SQL</h4>
-                <p>A little SQL unlocks a lot of data: queries, catalogs, and workspaces on a cloud data platform &mdash; plus using a GenAI assistant to draft and explain queries, always reviewed before you trust the output.</p>
+                <p>A little SQL unlocks a lot of data: queries, catalogs, and workspaces on a cloud data platform - plus using a GenAI assistant to draft and explain queries, always reviewed before you trust the output.</p>
             </div>
             <div class="module">
                 <span class="mod-num">5</span>
                 <h4>Visualization &amp; Communication</h4>
-                <p>Message, audience, and "is a chart even worth it?" Tables vs. visuals, choosing the right chart, decluttering, and the 10-second rule &mdash; a beautiful chart answering the wrong question is worse than a plain table answering the right one.</p>
+                <p>Message, audience, and "is a chart even worth it?" Tables vs. visuals, choosing the right chart, decluttering, and the 10-second rule - a beautiful chart answering the wrong question is worse than a plain table answering the right one.</p>
             </div>
             <div class="module">
                 <span class="mod-num">6</span>
@@ -1080,15 +1116,15 @@
             <div class="quote-grid">
                 <div class="quote">
                     <p>&ldquo;Patient, knowledgeable, and engaging throughout.&rdquo;</p>
-                    <div class="attr">&mdash; Workshop participant</div>
+                    <div class="attr"> - Workshop participant</div>
                 </div>
                 <div class="quote">
                     <p>&ldquo;The content was powerful and eye-opening.&rdquo;</p>
-                    <div class="attr">&mdash; Workshop participant</div>
+                    <div class="attr"> - Workshop participant</div>
                 </div>
                 <div class="quote">
                     <p>&ldquo;The helpers and coaches were very attentive and supportive.&rdquo;</p>
-                    <div class="attr">&mdash; Workshop participant</div>
+                    <div class="attr"> - Workshop participant</div>
                 </div>
             </div>
         </div>
@@ -1116,7 +1152,7 @@
 </section>
 
 <footer>
-    &copy; Mitchell Ray &mdash; All work genericized for public portfolio.
+    &copy; Mitchell Ray - All work genericized for public portfolio.
 </footer>
 
 <script>
