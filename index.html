@@ -1648,15 +1648,15 @@
             // so nothing ever crosses the readable column. Only at the very
             // bottom (the Connect section) do they leave the gutters and meet
             // near the centre, where there is little text to overlap.
-            var merge = ease(seg(p, 0.9, 1));        // 0 until 90%, then eases to 1
+            var merge = ease(seg(p, 0.97, 1));       // 0 until 97%, then eases to 1
             var mid = W / 2;
 
             // ring rides the RIGHT gutter, then converges to just right of centre
             var ringX = lerp(rightX, mid + 70, merge);
-            var ringY = track(p, [[0,0.16],[0.5,0.5],[0.9,0.8],[1,0.9]]) * H;
+            var ringY = track(p, [[0,0.16],[0.5,0.5],[0.97,0.8],[1,0.9]]) * H;
             // square rides the LEFT gutter, then converges to just left of centre
             var sqX = lerp(leftX, mid - 70, merge);
-            var sqY = track(p, [[0,0.5],[0.5,0.2],[0.9,0.66],[1,0.9]]) * H;
+            var sqY = track(p, [[0,0.5],[0.5,0.2],[0.97,0.66],[1,0.9]]) * H;
 
             var ringSize = Math.min(box, 200);
             var sqSize = Math.min(box, 150);
