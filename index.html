@@ -377,6 +377,30 @@
             background: rgba(52,211,153,0.10); border-color: rgba(52,211,153,0.35);
             color: var(--green);
         }
+        .book-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 2rem;
+        }
+        .book-card {
+            display: block; text-decoration: none; padding: 2rem;
+            background: var(--surface-2); border: 1px solid var(--border); border-radius: 16px;
+            transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        .book-card:hover {
+            transform: translateY(-4px); border-color: var(--accent);
+            box-shadow: 0 12px 32px rgba(108,99,255,0.18);
+        }
+        .book-card .book-icon {
+            width: 48px; height: 48px; border-radius: 12px; margin-bottom: 1.1rem;
+            display: flex; align-items: center; justify-content: center; font-size: 1.4rem;
+            background: rgba(108,99,255,0.14); color: var(--accent-light);
+        }
+        .book-card h3 { color: var(--text); font-size: 1.15rem; margin-bottom: 0.5rem; }
+        .book-card p { color: var(--text-dim); font-size: 0.88rem; line-height: 1.6; margin-bottom: 1rem; }
+        .book-card .book-cta {
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            color: var(--accent-light); font-size: 0.85rem; font-weight: 600;
+        }
+        @media (max-width: 720px) { .book-grid { grid-template-columns: 1fr; } }
 
         /* CONTACT */
         #contact { text-align: center; }
@@ -442,6 +466,7 @@
             <li><a href="#process">Process</a></li>
             <li><a href="#impact">Impact</a></li>
             <li><a href="#about">About</a></li>
+            <li><a href="#book">Work With Me</a></li>
             <li><a href="#contact">Contact</a></li>
         </ul>
         <button class="hamburger" id="hamburger" aria-label="Toggle navigation">
@@ -901,6 +926,28 @@
                 <span class="cert-badge cert-progress">Generative AI (CU Boulder) &mdash; in progress</span>
             </div>
         </div>
+    </div>
+</section>
+
+<!-- WORK WITH ME -->
+<section id="book">
+    <div class="section-label">Work With Me</div>
+    <div class="section-title">Consulting &amp; Corporate Training</div>
+    <p class="section-subtitle">Available for select engagements &mdash; from advising on data &amp; AI product strategy to running hands-on training for your team.</p>
+
+    <div class="book-grid">
+        <a class="book-card" href="mailto:mitchray1999@gmail.com?subject=Consulting%20Inquiry%20%E2%80%94%20Data%20%26%20AI%20Product%20Design&amp;body=Hi%20Mitchell%2C%0A%0AI%27d%20like%20to%20talk%20about%20a%20consulting%20engagement.%0A%0AOrganization%3A%0AProject%2Fgoal%3A%0ATimeline%3A%0ABudget%20range%3A%0A%0AThanks%21">
+            <div class="book-icon">&#128188;</div>
+            <h3>Book a Consulting Engagement</h3>
+            <p>Data &amp; AI product design, design systems, lakehouse architecture, RAG/semantic layers, and UX for governed data tools. Strategy, audits, or hands-on build support.</p>
+            <span class="book-cta">Start a conversation &rarr;</span>
+        </a>
+        <a class="book-card" href="mailto:mitchray1999@gmail.com?subject=Corporate%20Training%20Request%20%E2%80%94%20Data%2FAI%2FUX&amp;body=Hi%20Mitchell%2C%0A%0AWe%27d%20like%20to%20book%20you%20for%20a%20training%20event.%0A%0AOrganization%3A%0ATopic%20of%20interest%20(e.g.%20data%20modeling%2C%20SQL%2C%20data%20literacy%2C%20AI%2FUX)%3A%0AAudience%20size%3A%0AFormat%20(virtual%2Fin-person)%3A%0APreferred%20dates%3A%0A%0AThanks%21">
+            <div class="book-icon">&#127891;</div>
+            <h3>Book a Corporate Training Event</h3>
+            <p>Workshops and multi-cohort programs on data modeling, SQL, medallion architecture, data literacy, and designing trustworthy AI experiences. Virtual or in-person.</p>
+            <span class="book-cta">Request a session &rarr;</span>
+        </a>
     </div>
 </section>
 
