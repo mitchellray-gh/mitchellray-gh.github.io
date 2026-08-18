@@ -340,9 +340,37 @@
         .swatch .meta .hx { font-family: var(--mono); color: var(--text-dim); }
 
         /* Exhibit: grid demo */
-        .grid-demo { display: grid; grid-template-columns: repeat(12, 1fr); gap: 4px; }
-        .grid-demo span { background: var(--accent-glow); border: 1px dashed var(--accent-light); height: 26px; }
+        .grid-demo { display: grid; grid-template-columns: repeat(12, 1fr); gap: 3px; }
+        .grid-demo span { background: var(--accent-glow); border: 1px dashed var(--accent-light); height: 20px; }
         .grid-demo span.filled { background: var(--accent); border-style: solid; }
+        .grid-demo span.filled-2 { background: #003da5; border: 1px solid #003da5; }
+        .grid-demo span.filled-3 { background: #0c7bdc; border: 1px solid #0c7bdc; }
+
+        /* Exhibit: button states */
+        .btn-states { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.75rem; text-align: center; }
+        .btn-states .bs-lbl { font-family: var(--label); font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-dim); margin-bottom: 0.4rem; }
+        .mb { display: block; padding: 0.5rem; border-radius: 4px; font-size: 0.72rem; font-weight: 600; color: #fff; font-family: var(--font); }
+        .mb.default { background: #003da5; }
+        .mb.hover { background: #003085; box-shadow: 0 0 0 2px rgba(0,61,165,0.3); }
+        .mb.pressed { background: #003085; box-shadow: inset 0 2px 4px rgba(0,0,0,0.3); }
+        .mb.disabled { background: #96aed9; }
+        .btn-states .hx { font-family: var(--mono); font-size: 0.58rem; color: var(--text-dim); margin-top: 0.3rem; display:block; }
+
+        /* Sample ribbon + more fade */
+        .sample-tag {
+            display: inline-flex; align-items: center; gap: 0.4rem; margin-bottom: 1rem;
+            font-family: var(--label); font-size: 0.64rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.12em; color: var(--accent);
+            border: 1.5px solid var(--accent); padding: 0.3rem 0.7rem;
+        }
+        .sample-tag::before { content: "\25C6"; }
+        .more-fade {
+            position: relative; margin-top: -3.5rem; padding-top: 5rem; text-align: center;
+            background: linear-gradient(to bottom, rgba(244,241,234,0) 0%, #d8d2c4 60%, #b8b1a2 100%);
+        }
+        .more-fade .mf-inner { padding: 2rem; }
+        .more-fade h4 { font-family: var(--display); font-size: 1.4rem; font-weight: 600; color: var(--text); margin-bottom: 0.5rem; }
+        .more-fade p { font-size: 0.85rem; color: #4a453b; margin-bottom: 1.25rem; max-width: 420px; margin-left: auto; margin-right: auto; line-height: 1.6; }
 
         /* Exhibit: component mockups */
         .mock-dash { background: #fff; border: 1px solid var(--rule); font-size: 0.7rem; }
@@ -368,6 +396,15 @@
         .exhibit-list li { padding: 0.6rem 0; border-bottom: 1px solid var(--border); font-size: 0.85rem; color: var(--text-dim); display: flex; gap: 0.75rem; }
         .exhibit-list li:last-child { border-bottom: none; }
         .exhibit-list li b { color: var(--text); }
+        .flow-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .flow-col { border: 1px solid var(--border); padding: 1rem; }
+        .flow-col .flow-h { font-family: var(--label); font-size: 0.66rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.75rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); }
+        .flow-col.before .flow-h { color: var(--text-dim); }
+        .flow-col.after .flow-h { color: var(--green); }
+        .flow-step { font-size: 0.8rem; color: var(--text); padding: 0.4rem 0; border-bottom: 1px dotted var(--border); }
+        .flow-step:last-of-type { border-bottom: none; }
+        .flow-time { margin-top: 0.75rem; font-family: var(--display); font-weight: 600; font-size: 1.1rem; color: var(--accent); }
+        .flow-col.after .flow-time { color: var(--green); }
         body.modal-open { overflow: hidden; }
 
         /* MORE WORK GRID */
@@ -450,6 +487,21 @@
             padding: 0.3rem 0.7rem; border-radius: 0; font-size: 0.72rem;
             color: var(--text-dim); font-weight: 500;
         }
+        /* HOW I WORK principles */
+        .principles { counter-reset: principle; border-top: 1px solid var(--rule); margin-bottom: 3rem; }
+        .principle {
+            display: grid; grid-template-columns: 3.5rem 1fr; gap: 1.5rem;
+            padding: 1.75rem 0; border-bottom: 1px solid var(--border);
+        }
+        .principle::before {
+            counter-increment: principle; content: counter(principle, decimal-leading-zero);
+            font-family: var(--display); font-size: 1.6rem; font-weight: 500; color: var(--accent);
+            font-style: italic; line-height: 1;
+        }
+        .principle h4 { font-family: var(--display); font-size: 1.35rem; font-weight: 600; color: var(--text); margin-bottom: 0.5rem; letter-spacing: -0.01em; }
+        .principle p { color: var(--text-dim); font-size: 0.92rem; line-height: 1.7; }
+        .toolkit-strip { border-top: 1px solid var(--rule); padding-top: 1.5rem; }
+        .toolkit-strip .ts-lbl { font-family: var(--label); font-size: 0.66rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-dim); margin-bottom: 0.85rem; }
 
         /* METRICS BAND */
         .metrics-band {
@@ -887,8 +939,8 @@
         <div class="de-card">
             <div class="de-number">2</div>
             <h4>Metadata Distillation Pipeline</h4>
-            <p>Built a pipeline that distilled hundreds of MB of raw notebooks into a compact, structured knowledge base - deduplicating, ranking tables, mapping join relationships, and extracting a domain glossary.</p>
-            <div class="de-outcome"><strong>~600 MB &rarr; ~230 KB</strong> (2,600x reduction). 860+ duplicates removed.</div>
+            <p>The lakehouse held thousands of tables and years of analysts' notebooks - far too much for any human, or any AI context window, to reason over. I engineered a pipeline that turns that noise into the compact "brain" an AI assistant can actually trust: deduplicating notebooks, ranking tables by real usage, mining join relationships, and extracting a living domain glossary.</p>
+            <div class="de-outcome"><strong>~600 MB &rarr; ~230 KB</strong> of pure signal - a <strong>~2,600&times; reduction</strong>. Mapped ~5,900 tables, ~4,400 join keys, and ~350 real query patterns; removed 860+ duplicates. This is the grounding layer that stops the assistant from ever hallucinating a table name.</div>
         </div>
         <div class="de-card">
             <div class="de-number">3</div>
@@ -958,73 +1010,57 @@
 
 <!-- PROCESS / SKILLS -->
 <section id="process">
-    <div class="section-label">Process &amp; Toolkit</div>
+    <div class="section-label">Process &amp; Approach</div>
     <div class="section-title">How I Work</div>
-    <p class="section-subtitle">From user research and design systems to lakehouse engineering and RAG - the full toolkit I bring to data &amp; AI products.</p>
+    <p class="section-subtitle">Not a list of tools - the principles that actually shape how I build data &amp; AI products, end to end.</p>
 
-    <div class="skills-grid">
-        <div class="skill-group">
-            <h4><span class="icon" style="background:rgba(108,99,255,0.15);color:var(--accent-light)">&#9733;</span> UX &amp; Research</h4>
-            <div class="skill-chips">
-                <span class="skill-chip">Persona development</span>
-                <span class="skill-chip">Stakeholder interviews</span>
-                <span class="skill-chip">Usability testing</span>
-                <span class="skill-chip">CSAT / SUS measurement</span>
-                <span class="skill-chip">Journey mapping</span>
-                <span class="skill-chip">A/B experimentation</span>
-                <span class="skill-chip">WCAG accessibility</span>
+    <div class="principles">
+        <div class="principle">
+            <div>
+                <h4>Start from the real problem, not the request</h4>
+                <p>People usually ask for a chart when they need a decision. I dig for the actual question underneath - who has to act, on what, and how they'll know it worked - before I model a single table or design a screen.</p>
             </div>
         </div>
-        <div class="skill-group">
-            <h4><span class="icon" style="background:rgba(34,211,238,0.15);color:var(--cyan)">&#9632;</span> Design Systems</h4>
-            <div class="skill-chips">
-                <span class="skill-chip">Component libraries</span>
-                <span class="skill-chip">UX/UI standards</span>
-                <span class="skill-chip">Design governance</span>
-                <span class="skill-chip">Brand consistency</span>
+        <div class="principle">
+            <div>
+                <h4>Build the whole stack, so nothing gets lost in handoff</h4>
+                <p>I architect the data, engineer the pipeline and the AI on top, and design the interface. Owning it end to end means the trust I build into the model survives all the way to what the user actually sees - no telephone game between teams.</p>
             </div>
         </div>
-        <div class="skill-group">
-            <h4><span class="icon" style="background:rgba(244,114,182,0.15);color:var(--rose)">&#10024;</span> Data &amp; AI Product Design</h4>
-            <div class="skill-chips">
-                <span class="skill-chip">Conversational UX</span>
-                <span class="skill-chip">AI agent experience</span>
-                <span class="skill-chip">Adaptive responses</span>
-                <span class="skill-chip">Trust &amp; citation design</span>
-                <span class="skill-chip">Data-discovery UX</span>
+        <div class="principle">
+            <div>
+                <h4>Ground everything in truth the machine can't fake</h4>
+                <p>Whether it's a governed data source or a distilled context layer feeding an AI, I make sure answers trace to something real. No hallucinated tables, no invented metrics - if the system isn't sure, it says so.</p>
             </div>
         </div>
-        <div class="skill-group">
-            <h4><span class="icon" style="background:rgba(251,191,36,0.15);color:var(--amber)">&#9881;</span> Technical</h4>
-            <div class="skill-chips">
-                <span class="skill-chip">Enterprise BI (DAX/M)</span>
-                <span class="skill-chip">SQL / Lakehouse</span>
-                <span class="skill-chip">Python</span>
-                <span class="skill-chip">Prototyping</span>
-                <span class="skill-chip">Agile / Scrum</span>
+        <div class="principle">
+            <div>
+                <h4>Prototype fast, then prove it with real users</h4>
+                <p>I go from concept to working prototype in days, not quarters, using rapid agentic tooling. Then I put it in front of the people who'll use it and measure - satisfaction, task time, adoption - so decisions rest on evidence, not opinion.</p>
             </div>
         </div>
-        <div class="skill-group">
-            <h4><span class="icon" style="background:rgba(52,211,153,0.15);color:var(--green)">&#9881;</span> Data Engineering</h4>
-            <div class="skill-chips">
-                <span class="skill-chip">Lakehouse ingestion</span>
-                <span class="skill-chip">Metadata pipelines</span>
-                <span class="skill-chip">Medallion architecture</span>
-                <span class="skill-chip">Cloud storage</span>
-                <span class="skill-chip">RAG / semantic layers</span>
-                <span class="skill-chip">Data quality scoring</span>
-                <span class="skill-chip">Catalog governance</span>
+        <div class="principle">
+            <div>
+                <h4>Make it a standard, then teach it</h4>
+                <p>A one-off win fades; a reusable standard compounds. I turn what works into copy-paste component libraries, scorecards, and training so a whole organization gets faster - not just the one report I touched.</p>
             </div>
         </div>
-        <div class="skill-group">
-            <h4><span class="icon" style="background:rgba(108,99,255,0.15);color:var(--accent-light)">&#9733;</span> Leadership &amp; Enablement</h4>
-            <div class="skill-chips">
-                <span class="skill-chip">Cross-functional facilitation</span>
-                <span class="skill-chip">Training design &amp; delivery</span>
-                <span class="skill-chip">Mentoring</span>
-                <span class="skill-chip">Stakeholder alignment</span>
-                <span class="skill-chip">Storytelling for leadership</span>
-            </div>
+    </div>
+
+    <div class="toolkit-strip">
+        <div class="ts-lbl">Tools I reach for</div>
+        <div class="skill-chips">
+            <span class="skill-chip">Power BI (DAX / M)</span>
+            <span class="skill-chip">SQL / Lakehouse</span>
+            <span class="skill-chip">Python</span>
+            <span class="skill-chip">Medallion architecture</span>
+            <span class="skill-chip">RAG / semantic layers</span>
+            <span class="skill-chip">Cloud object storage</span>
+            <span class="skill-chip">Metadata &amp; context pipelines</span>
+            <span class="skill-chip">Component libraries</span>
+            <span class="skill-chip">Usability testing</span>
+            <span class="skill-chip">WCAG accessibility</span>
+            <span class="skill-chip">Agile / Scrum</span>
         </div>
     </div>
 </section>
@@ -1264,7 +1300,8 @@
             <button class="modal-close" aria-label="Close">&times;</button>
         </div>
         <div class="modal-body">
-            <p class="modal-note" style="margin-bottom:1.5rem;">Genericized recreations of the actual standards I authored. Employer branding, internal names, and source data removed for public display.</p>
+            <span class="sample-tag">Sample &middot; Genericized</span>
+            <p class="modal-note" style="margin-bottom:1.5rem;">A representative slice of the actual 28-page standard and component library I authored. Employer branding, internal names, and source data removed for public display.</p>
 
             <div class="exhibit">
                 <div class="exhibit-cap"><span>Fig. 1 - Color System &amp; Contrast</span><span class="fig">WCAG AA / AAA</span></div>
@@ -1284,18 +1321,35 @@
             </div>
 
             <div class="exhibit">
-                <div class="exhibit-cap"><span>Fig. 2 - Anchoring Grid</span><span class="fig">12 &times; 6 / 91px / 18px</span></div>
+                <div class="exhibit-cap"><span>Fig. 2 - Anchoring Grid</span><span class="fig">12 &times; 6 / 91px / 78px / 18px</span></div>
                 <div class="exhibit-inner">
                     <div class="grid-demo">
-                        <span class="filled"></span><span class="filled"></span><span class="filled"></span><span></span><span></span><span></span><span class="filled"></span><span class="filled"></span><span></span><span></span><span class="filled"></span><span class="filled"></span>
-                        <span></span><span></span><span></span><span class="filled"></span><span class="filled"></span><span class="filled"></span><span></span><span></span><span class="filled"></span><span class="filled"></span><span></span><span></span>
+                        <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+                        <span class="filled-2"></span><span class="filled-2"></span><span class="filled-2"></span><span class="filled-2"></span><span></span><span class="filled-3"></span><span class="filled-3"></span><span></span><span class="filled"></span><span class="filled"></span><span class="filled"></span><span class="filled"></span>
+                        <span class="filled-2"></span><span class="filled-2"></span><span class="filled-2"></span><span class="filled-2"></span><span></span><span class="filled-3"></span><span class="filled-3"></span><span></span><span class="filled"></span><span class="filled"></span><span class="filled"></span><span class="filled"></span>
+                        <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+                        <span class="filled-3"></span><span class="filled-3"></span><span class="filled-3"></span><span></span><span class="filled"></span><span class="filled"></span><span class="filled"></span><span></span><span class="filled-2"></span><span class="filled-2"></span><span class="filled-2"></span><span></span>
+                        <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
                     </div>
-                    <p class="modal-note" style="margin-top:1rem;">A 12-column &times; 6-row anchoring grid (91px columns, 78px rows, 18px margins) keeps every report visually aligned. Gridlines are development-only and never shipped to published reports.</p>
+                    <p class="modal-note" style="margin-top:1rem;">The full 12-column &times; 6-row anchoring grid (91px columns, 78px rows, 18px margins). Coloured cells show how KPI cards, charts, and panels snap to the grid so every report aligns. Gridlines are development-only and never ship to published reports.</p>
                 </div>
             </div>
 
             <div class="exhibit">
-                <div class="exhibit-cap"><span>Fig. 3 - Example Report Layout</span><span class="fig">Composed components</span></div>
+                <div class="exhibit-cap"><span>Fig. 3 - Button States</span><span class="fig">Primary / 4 states</span></div>
+                <div class="exhibit-inner">
+                    <div class="btn-states">
+                        <div><div class="bs-lbl">Default</div><span class="mb default">Verb Object</span><span class="hx">#003DA5</span></div>
+                        <div><div class="bs-lbl">Hover</div><span class="mb hover">Verb Object</span><span class="hx">#003085</span></div>
+                        <div><div class="bs-lbl">Pressed</div><span class="mb pressed">Verb Object</span><span class="hx">#003085</span></div>
+                        <div><div class="bs-lbl">Disabled</div><span class="mb disabled">Verb Object</span><span class="hx">#96AED9</span></div>
+                    </div>
+                    <p class="modal-note" style="margin-top:1rem;">Every interactive component is specified across default, hover, pressed, and disabled - with matched hex values, verb-object labels, and text/icon/icon-only variants for clear, consistent feedback.</p>
+                </div>
+            </div>
+
+            <div class="exhibit">
+                <div class="exhibit-cap"><span>Fig. 4 - Example Report Layout</span><span class="fig">Composed components</span></div>
                 <div class="exhibit-inner">
                     <div class="mock-dash">
                         <div class="mock-hd"><span class="lg"></span><b>Primary Header Title</b><span style="margin-left:auto" class="mock-btn">See Details</span></div>
@@ -1310,19 +1364,15 @@
                         </div>
                         <div style="border-top:1px solid #d8d2c4;padding:0.4rem 0.75rem;color:#6f685b;font-size:0.6rem;display:flex;justify-content:space-between"><span>Refresh Schedule 12 AM EST &middot; Last Refresh Today</span><span>Need Help?</span></div>
                     </div>
-                    <p class="modal-note" style="margin-top:1rem;">Primary/secondary headers, KPI cards (10px radius, #ECF3FF fill, accent bar), tables, graphs, and a footer - all copy-paste-ready from the component library and assembled on the grid.</p>
+                    <p class="modal-note" style="margin-top:1rem;">Primary/secondary headers, KPI cards (10px radius, #ECF3FF fill, accent bar), tables, graphs, and a footer - all copy-paste-ready from the component library and assembled on the grid above.</p>
                 </div>
             </div>
 
-            <div class="exhibit">
-                <div class="exhibit-cap"><span>Fig. 4 - Standard Coverage</span><span class="fig">28-page guide</span></div>
-                <div class="exhibit-inner">
-                    <ul class="exhibit-list">
-                        <li><b>Layout</b> Anchoring grid, primary/secondary headers, footer</li>
-                        <li><b>Visual</b> Color, Segoe UI typography scale, Google Material iconography (18/24px)</li>
-                        <li><b>Interactive</b> Buttons, slicers, menus, single &amp; multi filter panels</li>
-                        <li><b>Data</b> Tables, KPI cards, graphs, governed Copilot narrative summary</li>
-                    </ul>
+            <div class="more-fade">
+                <div class="mf-inner">
+                    <h4>&hellip; and 24 more pages</h4>
+                    <p>Slicers, menus, single &amp; multi filter panels, tables, iconography, typography scale, and a governed Copilot narrative-summary pattern - the full standard runs 28 pages plus a live component library.</p>
+                    <a href="mailto:mitchray1999@gmail.com?subject=Design%20System%20-%20Tell%20me%20more" class="btn btn-primary" style="text-decoration:none">Ask me about the full system</a>
                 </div>
             </div>
         </div>
@@ -1340,10 +1390,34 @@
             <button class="modal-close" aria-label="Close">&times;</button>
         </div>
         <div class="modal-body">
+            <span class="sample-tag">Sample &middot; Genericized</span>
             <p class="modal-note" style="margin-bottom:1.5rem;">Representative recreation of the two-step, plain-English discovery flow. Real prompts and data sources redacted.</p>
 
             <div class="exhibit">
-                <div class="exhibit-cap"><span>Fig. 1 - Grounded Answer Flow</span><span class="fig">15-30 min &rarr; seconds</span></div>
+                <div class="exhibit-cap"><span>Fig. 1 - The Journey, Collapsed</span><span class="fig">5 steps &rarr; 2</span></div>
+                <div class="exhibit-inner">
+                    <div class="flow-compare">
+                        <div class="flow-col before">
+                            <div class="flow-h">Before</div>
+                            <div class="flow-step">1 &middot; Search the catalog</div>
+                            <div class="flow-step">2 &middot; Read scattered docs</div>
+                            <div class="flow-step">3 &middot; Ping a subject expert</div>
+                            <div class="flow-step">4 &middot; Wait for a reply</div>
+                            <div class="flow-step">5 &middot; Reverse-engineer a query</div>
+                            <div class="flow-time">15-30 minutes</div>
+                        </div>
+                        <div class="flow-col after">
+                            <div class="flow-h">After</div>
+                            <div class="flow-step">1 &middot; Ask in plain English</div>
+                            <div class="flow-step">2 &middot; Get a grounded answer + next step</div>
+                            <div class="flow-time">Seconds</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="exhibit">
+                <div class="exhibit-cap"><span>Fig. 2 - Grounded Answer Flow</span><span class="fig">No hallucinated tables</span></div>
                 <div class="exhibit-inner">
                     <div class="mock-chat">
                         <div class="bubble u">Where can I find approved quality results for last quarter?</div>
@@ -1351,18 +1425,27 @@
                         <div class="bubble u">How do I access it?</div>
                         <div class="bubble a">Request access via the catalog page, then query directly or subscribe in your BI tool. Want the query starter?<span class="src">Next step provided &middot; No hallucinated tables</span></div>
                     </div>
-                    <p class="modal-note" style="margin-top:1rem;">Collapses a confusing 5-step hunt into 2 clear steps, grounded in approved sources with source context, confidence signals, and a clear next step.</p>
+                    <p class="modal-note" style="margin-top:1rem;">Answers are grounded only in approved sources with source context, explicit confidence signals, and a concrete next step - never a guessed table name.</p>
                 </div>
             </div>
 
             <div class="exhibit">
-                <div class="exhibit-cap"><span>Fig. 2 - Adaptive Personas</span><span class="fig">3 audiences</span></div>
+                <div class="exhibit-cap"><span>Fig. 3 - Adaptive Personas</span><span class="fig">3 audiences, one engine</span></div>
                 <div class="exhibit-inner">
                     <div class="scorecard">
-                        <div class="sc-cell"><div class="sc-dim">Specialist</div><p class="modal-note" style="margin-top:0.4rem">Terse, technical, schema-aware answers.</p></div>
-                        <div class="sc-cell"><div class="sc-dim">Occasional</div><p class="modal-note" style="margin-top:0.4rem">Guided, with light explanation and links.</p></div>
-                        <div class="sc-cell"><div class="sc-dim">Newcomer</div><p class="modal-note" style="margin-top:0.4rem">Plain-English, defines terms, step-by-step.</p></div>
+                        <div class="sc-cell"><div class="sc-dim">Specialist</div><p class="modal-note" style="margin-top:0.4rem">Terse, technical, schema-aware. Assumes fluency, skips the hand-holding.</p></div>
+                        <div class="sc-cell"><div class="sc-dim">Occasional</div><p class="modal-note" style="margin-top:0.4rem">Guided, with light explanation and links to the right catalog pages.</p></div>
+                        <div class="sc-cell"><div class="sc-dim">Newcomer</div><p class="modal-note" style="margin-top:0.4rem">Plain-English, defines terms, walks step-by-step. Built for onboarding.</p></div>
                     </div>
+                    <p class="modal-note" style="margin-top:1rem;">The same governed answer, re-voiced for who's asking - the design decision that made it usable across the whole organization, not just for experts.</p>
+                </div>
+            </div>
+
+            <div class="more-fade">
+                <div class="mf-inner">
+                    <h4>Piloted live, real users</h4>
+                    <p>Tested with real R&amp;D users and strong satisfaction scores, establishing a scalable, governed "front door" model for data discovery.</p>
+                    <a href="mailto:mitchray1999@gmail.com?subject=Data-Discovery%20Assistant%20-%20Tell%20me%20more" class="btn btn-primary" style="text-decoration:none">Ask me how it works</a>
                 </div>
             </div>
         </div>
@@ -1380,6 +1463,7 @@
             <button class="modal-close" aria-label="Close">&times;</button>
         </div>
         <div class="modal-body">
+            <span class="sample-tag">Sample &middot; Genericized</span>
             <p class="modal-note" style="margin-bottom:1.5rem;">Representative recreation of the AIX scorecard and pattern kit. Internal rubric values redacted.</p>
 
             <div class="exhibit">
@@ -1396,7 +1480,18 @@
             </div>
 
             <div class="exhibit">
-                <div class="exhibit-cap"><span>Fig. 2 - Agent UX Kit</span><span class="fig">Reusable patterns</span></div>
+                <div class="exhibit-cap"><span>Fig. 2 - Ask vs. Act Decision</span><span class="fig">When to confirm first</span></div>
+                <div class="exhibit-inner">
+                    <div class="flow-compare">
+                        <div class="flow-col after"><div class="flow-h">Act</div><div class="flow-step">Read-only lookups</div><div class="flow-step">Reversible &amp; low-risk</div><div class="flow-step">High confidence</div></div>
+                        <div class="flow-col before"><div class="flow-h">Ask first</div><div class="flow-step">Anything that writes or changes state</div><div class="flow-step">Ambiguous request</div><div class="flow-step">Low confidence or sensitive data</div></div>
+                    </div>
+                    <p class="modal-note" style="margin-top:1rem;">A clear rule for when an agent should just answer versus pause and confirm - the difference between a helpful assistant and a risky one.</p>
+                </div>
+            </div>
+
+            <div class="exhibit">
+                <div class="exhibit-cap"><span>Fig. 3 - Agent UX Kit</span><span class="fig">Reusable patterns</span></div>
                 <div class="exhibit-inner">
                     <ul class="exhibit-list">
                         <li><b>Citations</b> Every claim traces to an approved source</li>
@@ -1407,6 +1502,13 @@
                     </ul>
                 </div>
             </div>
+
+            <div class="more-fade">
+                <div class="mf-inner">
+                    <h4>A standard, not a one-off</h4>
+                    <p>The scorecard and pattern kit give every team a shared, measurable bar for AI experience quality - reusable across products.</p>
+                    <a href="mailto:mitchray1999@gmail.com?subject=AIX%20Standards%20-%20Tell%20me%20more" class="btn btn-primary" style="text-decoration:none">Ask me about the standard</a>
+                </div>
         </div>
     </div>
 </div>
