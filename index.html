@@ -626,6 +626,20 @@
         .feedback-scores { display: flex; flex-wrap: wrap; gap: 2.5rem; margin-bottom: 1.25rem; }
         .feedback-score .fs-num { font-family: var(--display); font-size: 2rem; font-weight: 600; color: var(--text); line-height: 1; }
         .feedback-score .fs-label { font-size: 0.76rem; color: var(--text-dim); margin-top: 0.4rem; text-transform: uppercase; letter-spacing: 0.04em; }
+        /* Prominent ratings banner */
+        .ratings-banner {
+            background: var(--text); color: var(--bg);
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            margin: 1.5rem 0 2rem;
+        }
+        .ratings-banner .rb-cell { padding: 1.5rem 1.25rem; border-left: 1px solid rgba(244,241,234,0.18); }
+        .ratings-banner .rb-cell:first-child { border-left: none; }
+        .ratings-banner .rb-num { font-family: var(--display); font-size: 2.6rem; font-weight: 500; line-height: 1; }
+        .ratings-banner .rb-num span { font-size: 1.1rem; color: rgba(244,241,234,0.55); }
+        .ratings-banner .rb-stars { color: var(--accent); font-size: 0.85rem; letter-spacing: 0.1em; margin-top: 0.5rem; }
+        .ratings-banner .rb-label { font-family: var(--label); font-size: 0.66rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: rgba(244,241,234,0.62); margin-top: 0.6rem; }
+        .feedback-h { font-family: var(--label); font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-dim); margin-bottom: 1rem; padding-top: 0.5rem; }
+        @media (max-width: 560px) { .ratings-banner { grid-template-columns: 1fr; } .ratings-banner .rb-cell { border-left: none; border-top: 1px solid rgba(244,241,234,0.18); } .ratings-banner .rb-cell:first-child { border-top: none; } }
         .quote-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; }
         .quote {
             background: var(--surface); border: 1px solid var(--rule); border-left: 4px solid var(--accent);
@@ -1196,6 +1210,25 @@
             <span class="pill">Flagship training</span>
         </div>
         <p class="lead">A hands-on programme of six modules that carries a team from a business problem through to a finished, shareable report, in the sequence of business problem, data model, analysis, visualization, and distribution. No background in programming or statistics is assumed; a person who has arranged and linked data within a spreadsheet already possesses the essential ideas. Each module observes the same order, <strong style="color:var(--text)">concept, practice, application, and reflection</strong>, and is directed toward a demonstrable result rather than a lecture, so that those attending leave able to resolve a problem of their own.</p>
+
+        <div class="ratings-banner">
+            <div class="rb-cell">
+                <div class="rb-num">4.5<span>/5</span></div>
+                <div class="rb-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+                <div class="rb-label">Trainer rating</div>
+            </div>
+            <div class="rb-cell">
+                <div class="rb-num">4.3<span>/5</span></div>
+                <div class="rb-stars">&#9733;&#9733;&#9733;&#9733;&#9734;</div>
+                <div class="rb-label">Module rating</div>
+            </div>
+            <div class="rb-cell">
+                <div class="rb-num">50+</div>
+                <div class="rb-stars" style="color:rgba(244,241,234,0.4)">&#9679;&#9679;&#9679;&#9679;&#9679;</div>
+                <div class="rb-label">Participants surveyed</div>
+            </div>
+        </div>
+
         <div class="module-grid">
             <div class="module">
                 <span class="mod-num">1</span>
@@ -1235,20 +1268,7 @@
         </div>
 
         <div class="feedback-band">
-            <div class="feedback-scores">
-                <div class="feedback-score">
-                    <div class="fs-num">4.5<span style="font-size:0.9rem;color:var(--text-dim)">/5</span></div>
-                    <div class="fs-label">Avg. trainer rating</div>
-                </div>
-                <div class="feedback-score">
-                    <div class="fs-num">4.3<span style="font-size:0.9rem;color:var(--text-dim)">/5</span></div>
-                    <div class="fs-label">Avg. module rating</div>
-                </div>
-                <div class="feedback-score">
-                    <div class="fs-num">50+</div>
-                    <div class="fs-label">Participant responses</div>
-                </div>
-            </div>
+            <div class="feedback-h">What participants said</div>
             <div class="quote-grid">
                 <div class="quote">
                     <p>&ldquo;Patient, knowledgeable, and engaging throughout.&rdquo;</p>
