@@ -401,6 +401,38 @@
             color: var(--accent-light); font-size: 0.85rem; font-weight: 600;
         }
         @media (max-width: 720px) { .book-grid { grid-template-columns: 1fr; } }
+        .curriculum {
+            margin-top: 2.5rem; background: var(--surface); border: 1px solid var(--border);
+            border-radius: 16px; padding: 2rem;
+        }
+        .curriculum-head { display: flex; align-items: baseline; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 0.4rem; }
+        .curriculum-head h3 { font-size: 1.35rem; color: var(--text); }
+        .curriculum-head .pill {
+            font-size: 0.72rem; font-weight: 600; padding: 0.2rem 0.6rem; border-radius: 999px;
+            background: rgba(52,211,153,0.12); color: var(--green); border: 1px solid rgba(52,211,153,0.3);
+        }
+        .curriculum > p.lead { color: var(--text-dim); font-size: 0.9rem; line-height: 1.7; margin-bottom: 1.5rem; max-width: 780px; }
+        .module-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem;
+        }
+        .module {
+            background: var(--surface-2); border: 1px solid var(--border);
+            border-radius: 12px; padding: 1.4rem; transition: all 0.2s;
+        }
+        .module:hover { border-color: var(--accent); transform: translateY(-2px); }
+        .module .mod-num {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 30px; height: 30px; border-radius: 8px; font-weight: 700; font-size: 0.85rem;
+            background: rgba(108,99,255,0.14); color: var(--accent-light); margin-bottom: 0.75rem;
+        }
+        .module h4 { font-size: 0.98rem; color: var(--text); margin-bottom: 0.5rem; }
+        .module p { color: var(--text-dim); font-size: 0.82rem; line-height: 1.6; }
+        .curriculum-formats {
+            margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border);
+            display: flex; flex-wrap: wrap; gap: 0.5rem 1.5rem; align-items: center;
+        }
+        .curriculum-formats span { color: var(--text-dim); font-size: 0.82rem; }
+        .curriculum-formats strong { color: var(--text); }
 
         /* CONTACT */
         #contact { text-align: center; }
@@ -956,6 +988,51 @@
             <p>Workshops and multi-cohort programs on data modeling, SQL, medallion architecture, data literacy, and designing trustworthy AI experiences. Virtual or in-person.</p>
             <span class="book-cta">Request a session &rarr;</span>
         </a>
+    </div>
+
+    <div class="curriculum">
+        <div class="curriculum-head">
+            <h3>Signature Workshop: Data Activation Fundamentals</h3>
+            <span class="pill">Flagship training</span>
+        </div>
+        <p class="lead">A hands-on, six-module program that takes any team from a business problem all the way to a polished, shareable report &mdash; business problem &rarr; data model &rarr; analysis &rarr; visualization &rarr; sharing. No coding or statistics background required; if you've ever linked data in a spreadsheet, you already understand the core ideas. Every module follows the same rhythm: <strong style="color:var(--text)">Concept &rarr; Hands-on &rarr; Apply &rarr; Reflect</strong> &mdash; outcome-driven, not lecture-driven, so participants leave able to solve a real problem.</p>
+        <div class="module-grid">
+            <div class="module">
+                <span class="mod-num">1</span>
+                <h4>Data Models at Scale</h4>
+                <p>Relational databases, star schemas, fact vs. dimension tables, and primary/foreign keys &mdash; taught with an unplugged "human data model" exercise that makes relationships click before anyone touches a tool.</p>
+            </div>
+            <div class="module">
+                <span class="mod-num">2</span>
+                <h4>Reporting with a BI Tool</h4>
+                <p>Power BI fundamentals: model, table, and report views; building your first table and slicers; fixing aggregations; and why a modeled BI tool removes the "curiosity tax" a spreadsheet charges.</p>
+            </div>
+            <div class="module">
+                <span class="mod-num">3</span>
+                <h4>Connecting, Cleaning &amp; Transforming</h4>
+                <p>Where data should live, connecting to new sources, and cleaning responsibly &mdash; nulls vs. real blanks, data types, repeatable transformation steps, and the ethics of cleaning without misleading.</p>
+            </div>
+            <div class="module">
+                <span class="mod-num">4</span>
+                <h4>Accessing Enterprise Data with SQL</h4>
+                <p>A little SQL unlocks a lot of data: queries, catalogs, and workspaces on a cloud data platform &mdash; plus using a GenAI assistant to draft and explain queries, always reviewed before you trust the output.</p>
+            </div>
+            <div class="module">
+                <span class="mod-num">5</span>
+                <h4>Visualization &amp; Communication</h4>
+                <p>Message, audience, and "is a chart even worth it?" Tables vs. visuals, choosing the right chart, decluttering, and the 10-second rule &mdash; a beautiful chart answering the wrong question is worse than a plain table answering the right one.</p>
+            </div>
+            <div class="module">
+                <span class="mod-num">6</span>
+                <h4>Verifying, Validating &amp; Sharing</h4>
+                <p>"How would I know if this were wrong?" Sanity checks, SME review, formal validation for high-stakes reports, and publishing responsibly so the right report reaches the right people.</p>
+            </div>
+        </div>
+        <div class="curriculum-formats">
+            <span><strong>Formats:</strong> half-day intensive &middot; multi-week cohort &middot; train-the-trainer</span>
+            <span><strong>Audience:</strong> analysts, scientists &amp; business users</span>
+            <span><strong>Delivery:</strong> virtual or in-person</span>
+        </div>
     </div>
 </section>
 
