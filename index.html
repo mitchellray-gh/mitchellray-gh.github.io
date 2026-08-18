@@ -1643,14 +1643,12 @@
             var rightX = W - gutter / 2;             // centre of the right gutter
 
             var rot = track(p, [[0,0],[0.5,180],[1,540]]);
-            // ring travels down the RIGHT gutter, drifting to the left gutter late
-            var ringSide = track(p, [[0,1],[0.55,1],[0.72,0]]);  // 1=right, 0=left
-            var ringX = lerp(leftX, rightX, ringSide);
-            var ringY = track(p, [[0,0.18],[0.5,0.5],[1,0.7]]) * H;
-            // square travels down the LEFT gutter, drifting to the right late
-            var sqSide = track(p, [[0,0],[0.55,0],[0.72,1]]);
-            var sqX = lerp(leftX, rightX, sqSide);
-            var sqY = track(p, [[0,0.5],[0.5,0.22],[1,0.42]]) * H;
+            // ring stays in the RIGHT gutter the whole way down (never crosses content)
+            var ringX = rightX;
+            var ringY = track(p, [[0,0.16],[0.5,0.5],[1,0.84]]) * H;
+            // square stays in the LEFT gutter the whole way down
+            var sqX = leftX;
+            var sqY = track(p, [[0,0.5],[0.5,0.2],[1,0.66]]) * H;
 
             var ringSize = Math.min(box, 200);
             var sqSize = Math.min(box, 150);
