@@ -355,6 +355,17 @@
         .recognition-list .rec-text {
             color: var(--text-dim); font-size: 0.85rem; line-height: 1.5;
         }
+        .cert-badges { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+        .cert-badge {
+            display: inline-flex; align-items: center;
+            padding: 0.45rem 0.85rem; border-radius: 999px;
+            background: rgba(108,99,255,0.10); border: 1px solid var(--border);
+            color: var(--text); font-size: 0.78rem; font-weight: 500;
+        }
+        .cert-badge.cert-progress {
+            background: rgba(52,211,153,0.10); border-color: rgba(52,211,153,0.35);
+            color: var(--green);
+        }
 
         /* CONTACT */
         #contact { text-align: center; }
@@ -861,6 +872,15 @@
                     <span class="rec-text">Repeated <strong>cross-functional leadership</strong> presenting at organizational and data-community events.</span>
                 </li>
             </ul>
+
+            <h3 style="font-size:1.1rem;margin:2rem 0 1rem;">Certifications</h3>
+            <div class="cert-badges">
+                <span class="cert-badge">PSPO&nbsp;I &mdash; Professional Scrum Product Owner</span>
+                <span class="cert-badge">Power BI &mdash; Data-Driven Decisions</span>
+                <span class="cert-badge">Data Visualization Certified</span>
+                <span class="cert-badge">Business Writing Certified</span>
+                <span class="cert-badge cert-progress">Generative AI (CU Boulder) &mdash; in progress</span>
+            </div>
         </div>
     </div>
 </section>
