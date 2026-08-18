@@ -192,22 +192,26 @@
         }
 
         /* FLOATING SHAPES (hero decoration) */
-        .hero-bg {
-            position: absolute; top: 0; right: 0; bottom: 0; width: 34%;
-            pointer-events: none; overflow: hidden; z-index: 1;
+        .hero-bg { display: none; }
+
+        /* SCROLL TRAVELERS */
+        #travelers {
+            position: fixed; inset: 0; pointer-events: none; z-index: 40;
+            overflow: hidden;
         }
-        .hero-bg .orb {
-            position: absolute; border-radius: 50%; filter: none; opacity: 1;
+        #travelers .tr {
+            position: absolute; top: 0; left: 0; will-change: transform;
         }
-        .hero-bg .orb-1 {
-            width: 300px; height: 300px; background: transparent;
-            border: 40px solid var(--accent); top: 14%; right: 8%; opacity: 0.9;
+        #travelers .tr-ring {
+            border: 34px solid var(--accent); border-radius: 50%;
+            box-sizing: border-box;
         }
-        .hero-bg .orb-2 {
-            width: 180px; height: 180px; background: var(--text);
-            border-radius: 0; top: 52%; right: 26%; opacity: 1;
-            transform: rotate(45deg);
+        #travelers .tr-square {
+            border: 6px solid var(--rule); background: var(--text);
+            box-sizing: border-box;
         }
+        #travelers.frame .tr-square { background: transparent; border-color: var(--accent); }
+        @media (max-width: 1024px) { #travelers { display: none; } }
 
         /* STATS BAR */
         .stats-bar {
@@ -703,6 +707,12 @@
 </head>
 <body>
 
+<!-- SCROLL TRAVELERS -->
+<div id="travelers" aria-hidden="true">
+    <div class="tr tr-ring" id="tr-ring"></div>
+    <div class="tr tr-square" id="tr-square"></div>
+</div>
+
 <!-- NAV -->
 <nav>
     <div class="inner">
@@ -774,10 +784,6 @@
                 <div class="stat-desc">Raw data distilled into AI-ready context</div>
             </div>
         </div>
-    </div>
-    <div class="hero-bg">
-        <div class="orb orb-1"></div>
-        <div class="orb orb-2"></div>
     </div>
 </section>
 
@@ -1588,6 +1594,72 @@
         ov.addEventListener('click', function(e){ if (e.target === ov) closeModals(); });
     });
     document.addEventListener('keydown', function(e){ if (e.key === 'Escape') closeModals(); });
+
+    // Scroll-choreographed travelers (ring + square)
+    (function(){
+        var wrap = document.getElementById('travelers');
+        var ring = document.getElementById('tr-ring');
+        var square = document.getElementById('tr-square');
+        if (!wrap || !ring || !square) return;
+
+        function lerp(a,b,t){ return a + (b-a)*t; }
+        function clamp01(t){ return t<0?0:(t>1?1:t); }
+        function seg(p,a,b){ return clamp01((p-a)/(b-a)); }
+        function ease(t){ return t<0.5 ? 2*t*t : 1-Math.pow(-2*t+2,2)/2; }
+        function track(p, pts){
+            if (p <= pts[0][0]) return pts[0][1];
+            if (p >= pts[pts.length-1][0]) return pts[pts.length-1][1];
+            for (var i=0;i<pts.length-1;i++){
+                var pa=pts[i][0], va=pts[i][1], pb=pts[i+1][0], vb=pts[i+1][1];
+                if (p>=pa && p<=pb) return lerp(va, vb, ease(seg(p,pa,pb)));
+            }
+            return pts[pts.length-1][1];
+        }
+
+        var ticking = false;
+        function render(){
+            ticking = false;
+            var doc = document.documentElement;
+            var max = (doc.scrollHeight - window.innerHeight) || 1;
+            var p = clamp01(window.scrollY / max);
+            var W = window.innerWidth, H = window.innerHeight;
+
+            // group centre, as a fraction of the viewport
+            var cx = track(p, [[0,0.82],[0.20,0.72],[0.34,0.17],[0.82,0.15],[1,0.5]]) * W;
+            var cy = track(p, [[0,0.20],[0.20,0.52],[0.34,0.18],[0.82,0.30],[1,0.60]]) * H;
+            var scale = track(p, [[0,1],[0.20,1],[0.34,1],[0.82,0.34],[0.9,0.34],[1,1]]);
+            var sep = track(p, [[0,150],[0.20,0]]);
+            var rot = track(p, [[0,0],[0.34,30],[0.82,700],[1,720]]);
+            var fp = ease(seg(p, 0.84, 1));           // frame progress
+            var ringOpa = 1 - ease(seg(p, 0.80, 0.9)); // ring fades before the frame forms
+
+            // sizes
+            var ringSize = 300 * scale;
+            var sqBase = 170 * scale;
+            var sqW = lerp(sqBase, Math.min(W*0.86, 780), fp);
+            var sqH = lerp(sqBase, Math.min(H*0.60, 460), fp);
+            var sqExtra = lerp(45, 0, fp);            // diamond -> axis-aligned frame
+
+            // offsets that collapse to overlap
+            var rX = cx - sep*0.35, rY = cy - sep*0.55;
+            var sX = cx + sep*0.35, sY = cy + sep*0.55;
+
+            ring.style.width = ringSize+'px';
+            ring.style.height = ringSize+'px';
+            ring.style.opacity = ringOpa;
+            ring.style.transform = 'translate('+rX+'px,'+rY+'px) translate(-50%,-50%) rotate('+rot+'deg)';
+
+            square.style.width = sqW+'px';
+            square.style.height = sqH+'px';
+            square.style.transform = 'translate('+sX+'px,'+sY+'px) translate(-50%,-50%) rotate('+(rot+sqExtra)+'deg)';
+
+            wrap.classList.toggle('frame', fp > 0.5);
+        }
+        function onScroll(){ if (!ticking){ ticking = true; requestAnimationFrame(render); } }
+        window.addEventListener('scroll', onScroll, { passive:true });
+        window.addEventListener('resize', render);
+        render();
+    })();
 </script>
 </body>
 </html>
