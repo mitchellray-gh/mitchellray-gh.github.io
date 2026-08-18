@@ -1624,36 +1624,48 @@
             var p = clamp01(window.scrollY / max);
             var W = window.innerWidth, H = window.innerHeight;
 
-            // group centre, as a fraction of the viewport
-            var cx = track(p, [[0,0.82],[0.20,0.72],[0.34,0.17],[0.82,0.15],[1,0.5]]) * W;
-            var cy = track(p, [[0,0.20],[0.20,0.52],[0.34,0.18],[0.82,0.30],[1,0.60]]) * H;
-            var scale = track(p, [[0,1],[0.20,1],[0.34,1],[0.82,0.34],[0.9,0.34],[1,1]]);
-            var sep = track(p, [[0,150],[0.20,0]]);
-            var rot = track(p, [[0,0],[0.34,30],[0.82,700],[1,720]]);
-            var fp = ease(seg(p, 0.84, 1));           // frame progress
-            var ringOpa = 1 - ease(seg(p, 0.80, 0.9)); // ring fades before the frame forms
+            // Content column is max 1200px, centred. Shapes live ONLY in the
+            // side gutters, never over readable content.
+            var content = Math.min(1200, W - 48);
+            var gutter = (W - content) / 2;          // px available on each side
+            var pad = 20;
+            var box = gutter - pad * 2;              // largest a shape may be
 
-            // sizes
-            var ringSize = 300 * scale;
-            var sqBase = 170 * scale;
-            var sqW = lerp(sqBase, Math.min(W*0.86, 780), fp);
-            var sqH = lerp(sqBase, Math.min(H*0.60, 460), fp);
-            var sqExtra = lerp(45, 0, fp);            // diamond -> axis-aligned frame
+            // If the gutters are too narrow to hold a shape clear of the text,
+            // hide the travelers entirely rather than overlap anything.
+            if (box < 70) {
+                ring.style.opacity = 0;
+                square.style.opacity = 0;
+                return;
+            }
 
-            // offsets that collapse to overlap
-            var rX = cx - sep*0.35, rY = cy - sep*0.55;
-            var sX = cx + sep*0.35, sY = cy + sep*0.55;
+            var leftX = gutter / 2;                  // centre of the left gutter
+            var rightX = W - gutter / 2;             // centre of the right gutter
 
+            var rot = track(p, [[0,0],[0.5,180],[1,540]]);
+            // ring travels down the RIGHT gutter, drifting to the left gutter late
+            var ringSide = track(p, [[0,1],[0.55,1],[0.72,0]]);  // 1=right, 0=left
+            var ringX = lerp(leftX, rightX, ringSide);
+            var ringY = track(p, [[0,0.18],[0.5,0.5],[1,0.7]]) * H;
+            // square travels down the LEFT gutter, drifting to the right late
+            var sqSide = track(p, [[0,0],[0.55,0],[0.72,1]]);
+            var sqX = lerp(leftX, rightX, sqSide);
+            var sqY = track(p, [[0,0.5],[0.5,0.22],[1,0.42]]) * H;
+
+            var ringSize = Math.min(box, 200);
+            var sqSize = Math.min(box, 150);
+
+            ring.style.opacity = 0.92;
             ring.style.width = ringSize+'px';
             ring.style.height = ringSize+'px';
-            ring.style.opacity = ringOpa;
-            ring.style.transform = 'translate('+rX+'px,'+rY+'px) translate(-50%,-50%) rotate('+rot+'deg)';
+            ring.style.transform = 'translate('+ringX+'px,'+ringY+'px) translate(-50%,-50%) rotate('+rot+'deg)';
 
-            square.style.width = sqW+'px';
-            square.style.height = sqH+'px';
-            square.style.transform = 'translate('+sX+'px,'+sY+'px) translate(-50%,-50%) rotate('+(rot+sqExtra)+'deg)';
+            square.style.opacity = 1;
+            square.style.width = sqSize+'px';
+            square.style.height = sqSize+'px';
+            square.style.transform = 'translate('+sqX+'px,'+sqY+'px) translate(-50%,-50%) rotate('+(rot+45)+'deg)';
 
-            wrap.classList.toggle('frame', fp > 0.5);
+            wrap.classList.remove('frame');
         }
         function onScroll(){ if (!ticking){ ticking = true; requestAnimationFrame(render); } }
         window.addEventListener('scroll', onScroll, { passive:true });
