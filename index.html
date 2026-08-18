@@ -108,7 +108,7 @@
             min-height: 100vh; display: flex; align-items: center;
             padding-top: 60px; position: relative;
         }
-        #hero .hero-content { max-width: 780px; }
+        #hero .hero-content { max-width: 780px; position: relative; z-index: 2; }
         .masthead {
             display: flex; flex-wrap: wrap; gap: 0 2rem; align-items: center;
             border-top: 3px solid var(--rule); border-bottom: 1px solid var(--rule);
@@ -193,9 +193,8 @@
 
         /* FLOATING SHAPES (hero decoration) */
         .hero-bg {
-            position: absolute; top: 0; right: 0; bottom: 0; width: 42%;
-            pointer-events: none; overflow: hidden;
-            border-left: 1px solid var(--rule);
+            position: absolute; top: 0; right: 0; bottom: 0; width: 34%;
+            pointer-events: none; overflow: hidden; z-index: 1;
         }
         .hero-bg .orb {
             position: absolute; border-radius: 50%; filter: none; opacity: 1;
@@ -681,6 +680,9 @@
             }
             .about-grid { grid-template-columns: 1fr; }
             #hero h1 { font-size: 2.2rem; }
+            .hero-bg { display: none; }
+        }
+        @media (max-width: 1140px) {
             .hero-bg { display: none; }
         }
     </style>
