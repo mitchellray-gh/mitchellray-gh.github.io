@@ -341,6 +341,17 @@
         }
         .about-text p { color: var(--text-dim); font-size: 0.92rem; line-height: 1.8; margin-bottom: 1rem; }
         .about-text .bio-long { margin-top: 1.5rem; }
+        .about-portrait {
+            display: flex; align-items: center; gap: 1.25rem; margin-bottom: 1.75rem;
+        }
+        .about-portrait img {
+            width: 96px; height: 96px; border-radius: 50%; object-fit: cover;
+            border: 2px solid var(--accent); box-shadow: 0 0 0 4px rgba(108,99,255,0.12);
+            flex-shrink: 0;
+        }
+        .about-portrait .portrait-name { font-size: 1.1rem; font-weight: 700; color: var(--text); }
+        .about-portrait .portrait-role { font-size: 0.85rem; color: var(--accent-light); }
+        .about-portrait .portrait-loc { font-size: 0.8rem; color: var(--text-dim); margin-top: 0.15rem; }
         .recognition-list { list-style: none; }
         .recognition-list li {
             display: flex; gap: 0.75rem; align-items: flex-start;
@@ -841,6 +852,14 @@
 
     <div class="about-grid">
         <div class="about-text">
+            <div class="about-portrait">
+                <img src="portrait.png" alt="Portrait photo of Mitchell Ray" width="96" height="96">
+                <div>
+                    <div class="portrait-name">Mitchell Ray</div>
+                    <div class="portrait-role">UX Designer & Data Engineer</div>
+                    <div class="portrait-loc">Greater Cincinnati, OH</div>
+                </div>
+            </div>
             <p>I'm a UX designer and data engineer working on data and AI products at a Fortune 50 consumer goods company, where I've spent 7+ years and was promoted into a research specialist role. I work at the intersection of complex systems and everyday users — architecting the pipelines, data models, and governed knowledge layers underneath, then turning them into interfaces people actually understand and trust.</p>
             <p>I'm equally at home in a medallion lakehouse designing dimensional models, publishing governed data, and engineering RAG/semantic layers, as I am running usability tests and building design systems. My focus is reducing friction end-to-end and proving impact with real metrics.</p>
             <div class="bio-long">
