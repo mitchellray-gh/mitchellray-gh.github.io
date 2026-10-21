@@ -18,7 +18,7 @@ Widgets.cosine = (b, UI) => {
       <text x="${cx + 55}" y="${cy - 8}" font-size="12">${(ang * 180 / Math.PI).toFixed(0)}&deg;</text>
       <rect x="250" y="40" width="150" height="14" fill="#d8d2c4"/><rect x="250" y="40" width="${150 * Math.max(0, cos)}" height="14" fill="#1f7a52"/>
       <text x="250" y="32" font-size="11">cosine similarity</text><text x="250" y="76" font-size="13" font-weight="700">${UI.f(cos, 3)}</text>
-      <text x="250" y="100" font-size="10" fill="#6f685b">same direction = 1, perpendicular = 0</text>`;
+      <text x="190" y="100" font-size="10" fill="#6f685b">same direction = 1, perpendicular = 0</text>`;
     o.innerHTML = `Dot product <b>${UI.f(dp, 2)}</b> &divide; (&Vert;q&Vert; <b>${UI.f(nq, 3)}</b> &times; &Vert;d&Vert; <b>${UI.f(nd, 3)}</b>) = <span class="verdict">cos = ${UI.f(cos, 3)}</span>`;
   }
   draw();

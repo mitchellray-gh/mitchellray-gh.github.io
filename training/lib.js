@@ -1,4 +1,4 @@
-﻿/* Lesson engine. Page contract: <body data-module="N"><main id="lesson"><section data-toc="Title">...</section></main> + scripts.
+/* Lesson engine. Page contract: <body data-module="N"><main id="lesson"><section data-toc="Title">...</section></main> + scripts.
    Widgets: <div class="widget" data-w="name" data-title="Try it: ..."></div>, registered via Widgets.name = (el, UI) => {...}
    Quizzes: <div class="check"><ol><li><span class="q">Question</span><span class="a">Answer</span></li></ol></div> */
 window.Widgets = window.Widgets || {};
@@ -130,5 +130,15 @@ document.addEventListener("DOMContentLoaded", function () {
     e.target.classList.toggle("done", s.has(n)); e.target.textContent = s.has(n) ? "\u2713 Completed" : "Mark module complete";
     document.querySelector(".pmap a.cur").classList.toggle("done", s.has(n));
   });
+  // keep SVG text legible on narrow screens: scroll sideways instead of shrinking below 1x
+  document.querySelectorAll("svg.diagram[viewBox]").forEach(s => {
+    const w = document.createElement("div"); w.className = "svgscroll"; s.replaceWith(w); w.appendChild(s);
+  });
+  const fit = () => lesson.querySelectorAll("svg[viewBox]").forEach(s => {
+    const vw = s.viewBox.baseVal.width;
+    s.style.minWidth = innerWidth < 700 ? Math.round(vw * 1.0) + "px" : "";
+  });
+  fit(); addEventListener("resize", fit);
+  new MutationObserver(fit).observe(lesson, { childList: true, subtree: true });
   document.body.insertAdjacentHTML("beforeend", `<footer class="sf">&copy; Mitchell Ray &middot; Training material</footer>`);
 });

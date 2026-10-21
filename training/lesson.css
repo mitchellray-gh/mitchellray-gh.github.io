@@ -80,6 +80,8 @@ td.num,th.num{text-align:right;font-family:var(--mono);font-size:.85rem}
 .flow .node b{display:block;font-family:var(--label);font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);margin-bottom:.15rem}
 .flow .node.hl{background:var(--text);color:var(--bg)}.flow .node.hl b{color:#ffb199}
 .flow .arrow{align-self:center;font-size:1.3rem;color:var(--accent);flex:0 0 auto}
+.cards>*,.widget,.diagram,.mini-flow>*,.widget .out{min-width:0;max-width:100%}
+.widget .out{overflow-x:auto}
 .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.9rem;margin:0 0 1.2rem}
 .card{background:var(--surface);border:1px solid var(--rule);padding:1rem 1.1rem}
 .card h5{font-family:var(--label);font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:var(--accent);margin-bottom:.35rem}
@@ -91,6 +93,7 @@ td.num,th.num{text-align:right;font-family:var(--mono);font-size:.85rem}
 svg text{font-family:var(--font)}
 .diagram{background:var(--surface);border:1px solid var(--border);padding:1rem;margin:0 0 1.2rem;overflow-x:auto}
 .diagram svg{display:block;margin:0 auto;max-width:100%;height:auto}
+@media(max-width:700px){.diagram svg{min-width:560px}}
 .diagram figcaption,.caption{font-size:.8rem;color:var(--dim);text-align:center;margin-top:.5rem}
 
 /* widgets */
@@ -145,3 +148,4 @@ ul.takeaways li::before{content:"\2713";position:absolute;left:.9rem;color:var(-
 footer.sf{text-align:center;padding:2rem;font-size:.8rem;color:var(--dim);border-top:1px solid var(--border)}
 @media(max-width:980px){.layout{grid-template-columns:1fr}.toc{display:none}}
 @media(max-width:560px){.bars .b{grid-template-columns:90px 1fr 54px}}
+.svgscroll{overflow-x:auto;max-width:100%;margin:0 0 1.2rem}.svgscroll>svg.diagram{margin-bottom:0}
