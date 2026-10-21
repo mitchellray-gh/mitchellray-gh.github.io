@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Module 5 | Training</title>
+<link rel="stylesheet" href="lesson.css">
+<style>
+.widget .mt{width:auto;display:table;margin-bottom:.6rem}
+.widget .mt input[type=number]{width:4.6rem;padding:.25rem .4rem}
+.widget .mt td.opt{background:#e6f3ec;font-weight:700}
+.widget .mt td.grd{outline:2px dashed var(--accent);outline-offset:-3px}
+.widget .stg{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:.9rem}
+.widget .stg button.on{background:var(--green);border-color:var(--green)}
+</style>
+</head>
+<body data-module="5">
+<main id="lesson">
+
+<section data-toc="5.1 From &ldquo;what&rdquo; to &ldquo;which field&rdquo;">
+<h2><span class="n">5.1</span>The problem: from &ldquo;what&rdquo; to &ldquo;exactly which field&rdquo;</h2>
+<p>By the end of Module 4 the question has been fully parsed:</p>
+<div class="formula">template(rank) = ⟨ measure = Revenue, dimension = Store, order = desc, N = 5,
+                   location = Paris (France), time = [2026-07-01, 2026-10-01) ⟩</div>
+<p>The chosen sources still contain dozens of columns. Three gaps remain:</p>
+<table>
+<tr><th>Gap</th><th>Question</th><th>Sections</th></tr>
+<tr><td>Matching</td><td>Which column is &ldquo;Revenue&rdquo;? Which is &ldquo;Store&rdquo;? Which date column?</td><td>5.2&ndash;5.3</td></tr>
+<tr><td>Confidence</td><td>How sure are we, end to end? Does the result look plausible?</td><td>5.4&ndash;5.5</td></tr>
+<tr><td>Ranking</td><td>Of all candidate sources and plans, which come first?</td><td>5.6&ndash;5.9</td></tr>
+</table>
+<div class="callout plain" data-tag="In plain English">
+<p>The system now knows <i>what</i> you want (&ldquo;revenue, by store, top 5, Paris, this quarter&rdquo;). This module works out <i>which exact column</i> in the database means each of those words, how much to trust the whole chain of guesses, and how to order the options.</p>
+</div>
+<div class="callout analogy" data-tag="Analogy">
+<p>Module 4 handed you a shopping list. Module 5 is walking the aisles: finding the exact product on the shelf for each item, checking the price looks sane, and sorting the trolley so the best choices are on top.</p>
+</div>
+<div class="flow">
+  <div class="node"><b>5.2&ndash;5.3 Match</b>slots &rarr; fields, values &rarr; columns</div><span class="arrow">&rarr;</span>
+  <div class="node"><b>5.4&ndash;5.5 Trust</b>combine confidence, sanity-check</div><span class="arrow">&rarr;</span>
+  <div class="node"><b>5.6&ndash;5.9 Rank</b>two stages, learn, diversify, evaluate</div><span class="arrow">&rarr;</span>
+  <div class="node hl"><b>5.10 Score</b>one candidate score &rarr; Module 6</div>
+</div>
+</section>
+
+<section data-toc="5.2 Bipartite matching">
+<h2><span class="n">5.2</span>Matching slots to fields: bipartite matching</h2>
+<h3>The setup</h3>
+<p>Build a bipartite graph:</p>
+<ul>
+<li><b>Left nodes:</b> the template slots, written S = {s<sub>1</sub>, …, s<sub>m</sub>}</li>
+<li><b>Right nodes:</b> the candidate fields, written F = {f<sub>1</sub>, …, f<sub>n</sub>}</li>
+<li><b>Edge weights:</b> w(s, f) = how well field f represents slot s</li>
+</ul>
+<p>Weights come from the Module 2 signals: embedding similarity between names and descriptions, the lexicon, type compatibility (a measure needs a numeric field, a time slot needs a date field) and curated metadata.</p>
+<div class="callout plain" data-tag="In plain English">
+<p>&ldquo;Bipartite&rdquo; just means two groups: the things we are looking for (slots) on one side and the things we could use (columns) on the other. Lines connect them, and each line has a score for &ldquo;how good a fit is this?&rdquo;.</p>
+</div>
+
+<h3>The objective</h3>
+<p>Choose a matching M: a set of slot&ndash;field pairs in which no slot and no field is used twice.</p>
+<div class="formula">M* = argmax_M  Σ_{(s,f) ∈ M} w(s, f)</div>
+<p class="plainline">choose the one-to-one pairing whose scores add up to the biggest total.</p>
+<p>If each weight is a log probability, w(s, f) = log P(f represents s), then maximizing the sum is the same as maximizing the joint probability that all the matches are right. This is the same trick used for join paths in Module 3.</p>
+
+<h3>Why greedy fails</h3>
+<p>Greedy matching takes the single best pair first, then the best remaining pair, and so on. Here is a small case where that goes wrong:</p>
+<table>
+<tr><th></th><th class="num">amount</th><th class="num">sales_total</th></tr>
+<tr><td>Revenue</td><td class="num">0.90</td><td class="num">0.80</td></tr>
+<tr><td>Refund</td><td class="num">0.85</td><td class="num">0.10</td></tr>
+</table>
+<p><code>amount</code> is a generic name, so it fits both concepts. <code>sales_total</code> only fits Revenue.</p>
+<div class="formula">Greedy:   Revenue → amount (0.90), then Refund → sales_total (0.10)    total = 1.00
+Optimal:  Revenue → sales_total (0.80),  Refund → amount (0.85)        total = 1.65</div>
+<p>Greedy grabbed the most attractive pair and left Refund with a nonsense match. The optimal solution gives up a little on Revenue to gain a lot on Refund.</p>
+<div class="diagram"><svg viewBox="0 0 520 170" role="img" aria-label="Bipartite graph of Revenue and Refund to amount and sales_total">
+  <g font-size="12">
+    <rect x="30" y="22" width="110" height="36" fill="#fff" stroke="#1a1815"/><text x="85" y="44" text-anchor="middle" font-weight="700">Revenue</text>
+    <rect x="30" y="102" width="110" height="36" fill="#fff" stroke="#1a1815"/><text x="85" y="124" text-anchor="middle" font-weight="700">Refund</text>
+    <rect x="380" y="22" width="110" height="36" fill="#1a1815"/><text x="435" y="44" text-anchor="middle" fill="#f4f1ea" font-weight="700">amount</text>
+    <rect x="380" y="102" width="110" height="36" fill="#1a1815"/><text x="435" y="124" text-anchor="middle" fill="#f4f1ea" font-weight="700">sales_total</text>
+    <text x="85" y="14" text-anchor="middle" fill="#6f685b" font-size="10">SLOTS</text><text x="435" y="14" text-anchor="middle" fill="#6f685b" font-size="10">FIELDS</text>
+  </g>
+  <g fill="none" stroke-width="2">
+    <path d="M140 40 L380 40" stroke="#e8481c" stroke-dasharray="6 4"/>
+    <path d="M140 120 L380 120" stroke="#e8481c" stroke-dasharray="6 4"/>
+    <path d="M140 40 L380 120" stroke="#1f7a52" stroke-width="4"/>
+    <path d="M140 120 L380 40" stroke="#1f7a52" stroke-width="4"/>
+  </g>
+  <g font-size="11" font-weight="700">
+    <text x="260" y="34" text-anchor="middle" fill="#e8481c">0.90</text>
+    <text x="260" y="136" text-anchor="middle" fill="#e8481c">0.10</text>
+    <text x="215" y="62" text-anchor="middle" fill="#1f7a52">0.80</text>
+    <text x="305" y="62" text-anchor="middle" fill="#1f7a52">0.85</text>
+  </g>
+  <text x="260" y="162" text-anchor="middle" font-size="11" fill="#6f685b">green solid = optimal (1.65) &middot; orange dashed = greedy (1.00)</text>
+</svg></div>
+<div class="callout analogy" data-tag="Analogy">
+<p>Seating guests at a wedding: if you give the loudest guest their first-choice seat without looking at anyone else, you can end up putting the person who <i>only</i> gets along with that seat&rsquo;s neighbour at the far end of the room. A good planner looks at the whole table.</p>
+</div>
+<div class="widget" data-w="matching" data-title="Greedy vs optimal matching: edit the weights"></div>
+
+<h3>The Hungarian algorithm (intuition)</h3>
+<p>The Hungarian algorithm finds the optimal matching in O(n³) time. The idea:</p>
+<ol>
+<li>Turn it into a cost-minimization problem (cost = max weight − weight).</li>
+<li>Subtract each row&rsquo;s minimum, then each column&rsquo;s minimum, so that zeros mark &ldquo;best available&rdquo; choices.</li>
+<li>Look for a full set of zeros in which no two share a row or column. If none exists, adjust the costs and repeat.</li>
+</ol>
+<p>The result is the globally best assignment, never a locally greedy one.</p>
+<div class="worked"><h4>Walk-through on the Revenue / Refund table <small>(added illustration)</small></h4>
+<div class="formula">Cost = 0.90 − weight:        amount  sales_total
+                  Revenue      0.00     0.10
+                  Refund       0.05     0.80
+Subtract row minima (0, 0.05): Revenue 0.00 0.10 | Refund 0.00 0.75
+Subtract column minima (0, 0.10): Revenue 0.00 0.00 | Refund 0.00 0.65
+Zeros: (Revenue, amount), (Revenue, sales_total), (Refund, amount)
+Full set with no shared row or column: Revenue → sales_total, Refund → amount   ✓</div></div>
+
+<h3>Practical variations</h3>
+<table>
+<tr><th>Variation</th><th>When it applies</th></tr>
+<tr><td>Unmatched slot</td><td>No field has w ≥ τ, so leave the slot empty and fill it with a prior, or ask (Module 3, section 3.9)</td></tr>
+<tr><td>One field serving two slots</td><td>The same column can be both a dimension and a filter (&ldquo;stores in Paris, by store&rdquo;)</td></tr>
+<tr><td>Type hard constraints</td><td>w(s, f) = −∞ when the types are incompatible (a sum over a text column)</td></tr>
+</table>
+<div class="callout note" data-tag="Note">
+<p>Because the &ldquo;one field serving two slots&rdquo; case breaks the one-to-one rule, the matching is allowed to reuse a column across a dimension slot and a filter slot. In the calculator above you can mimic a hard type constraint by typing a very negative weight such as &minus;9.</p>
+</div>
+</section>
+
+<section data-toc="5.3 Validating values">
+<h2><span class="n">5.3</span>Validating values against the data</h2>
+<p>A literal value in the question (&ldquo;EMEA&rdquo;, &ldquo;California&rdquo;, &ldquo;Gold&rdquo;) must actually exist in the matched field. Otherwise the query returns nothing, or the wrong rows.</p>
+<h3>Three levels of lookup</h3>
+<table>
+<tr><th>Level</th><th>Rule</th><th>Example</th></tr>
+<tr><td>Exact</td><td>v ∈ V(f)</td><td>&ldquo;EMEA&rdquo; = &ldquo;EMEA&rdquo;</td></tr>
+<tr><td>Normalized</td><td>norm(v) ∈ norm(V(f)), ignoring case, spaces and punctuation</td><td>&ldquo;emea &rdquo; → &ldquo;EMEA&rdquo;</td></tr>
+<tr><td>Fuzzy</td><td>max_{u ∈ V(f)} sim(v, u) ≥ τ_v</td><td>&ldquo;Calfornia&rdquo; → &ldquo;California&rdquo;</td></tr>
+</table>
+<p>Fuzzy example: &ldquo;Calfornia&rdquo; vs. &ldquo;California&rdquo; is one insertion apart, and the longer word has 10 letters.</p>
+<div class="formula">sim = 1 − 1/10 = 0.90   ≥ τ_v = 0.85   ⇒  accept, and mention the correction</div>
+<div class="callout plain" data-tag="In plain English">
+<p>Try the exact spelling first, then ignore capital letters and stray spaces, and only then allow &ldquo;close enough&rdquo; typos. The more forgiving the lookup, the more clearly the system should tell you what it assumed.</p>
+</div>
+<div class="callout key" data-tag="Where sim comes from">
+<p>The similarity used here is edit distance based: sim = 1 &minus; (number of single-letter edits) / (length of the longer word). The widget below computes it for you with the Levenshtein distance.</p>
+</div>
+<div class="widget" data-w="lookup" data-title="Value lookup: exact, normalized, fuzzy"></div>
+
+<h3>Which column holds the value?</h3>
+<p>Sometimes the value is known but the field isn&rsquo;t. &ldquo;Revenue from Gold customers&rdquo;: where does &ldquo;Gold&rdquo; live? Treat it as Bayesian inference over the candidate fields:</p>
+<div class="formula">P(f | v) ∝ P(v | f) · P(f | slot)</div>
+<ul>
+<li>P(v | f) is how common v is in field f.</li>
+<li>P(f | slot) is how well the field&rsquo;s type fits the slot. The template expects a customer attribute.</li>
+</ul>
+<table>
+<tr><th>Field</th><th>Rows with &ldquo;Gold&rdquo;</th><th class="num">P(v | f)</th><th class="num">P(f | customer slot)</th><th class="num">Product</th></tr>
+<tr class="win"><td>customer_tier</td><td>1,200 of 10,000</td><td class="num">0.12</td><td class="num">0.8</td><td class="num">0.096</td></tr>
+<tr class="lose"><td>product_color</td><td>30 of 50,000</td><td class="num">0.0006</td><td class="num">0.1</td><td class="num">0.00006</td></tr>
+</table>
+<p>The ratio is 0.096 / 0.00006 = 1,600 : 1 in favour of customer_tier.</p>
+<div class="callout analogy" data-tag="Analogy">
+<p>You hear the word &ldquo;Gold&rdquo; in a crowded room. Is someone talking about a customer tier or a paint colour? Two clues decide it: how often is that word used in each topic, and which topic fits the sentence you are in. Multiply both clues together.</p>
+</div>
+<div class="widget" data-w="whichcol" data-title="Which column holds &ldquo;Gold&rdquo;? A Bayes calculator"></div>
+
+<h3>The empty-result check</h3>
+<p>A query that returns zero rows is strong evidence that a value or filter is wrong, rather than evidence that the true answer is zero:</p>
+<div class="formula">if |result| = 0:   re-check each filter value  →  relax filters one at a time  →  find which one empties the result</div>
+</section>
+
+<section data-toc="5.4 Combining confidence">
+<h2><span class="n">5.4</span>Combining confidence across stages</h2>
+<p>Every stage so far produced a probability. If the stages are roughly independent, the probability that everything is right is their product:</p>
+<div class="formula">Conf = Πᵢ pᵢ        log Conf = Σᵢ log pᵢ</div>
+<p class="plainline">the chance that every step is right is each step&rsquo;s chance multiplied together, so it can only get smaller.</p>
+<h3>Worked example</h3>
+<table>
+<tr><th>Stage</th><th>Module</th><th class="num">p<sub>i</sub></th></tr>
+<tr><td>Intent (rank)</td><td>4</td><td class="num">0.90</td></tr>
+<tr><td>Source choice</td><td>1</td><td class="num">0.66</td></tr>
+<tr><td>Join path</td><td>3</td><td class="num">0.74</td></tr>
+<tr><td>Entity (Paris, France)</td><td>4</td><td class="num">0.69</td></tr>
+<tr><td>Field matching</td><td>5</td><td class="num">0.85</td></tr>
+</table>
+<div class="formula">Conf = 0.90 × 0.66 × 0.74 × 0.69 × 0.85 ≈ 0.258</div>
+<div class="flow">
+  <div class="node"><b>Intent</b>0.90</div><span class="arrow">&times;</span>
+  <div class="node"><b>Source</b>0.66</div><span class="arrow">&times;</span>
+  <div class="node"><b>Join</b>0.74</div><span class="arrow">&times;</span>
+  <div class="node"><b>Entity</b>0.69</div><span class="arrow">&times;</span>
+  <div class="node"><b>Fields</b>0.85</div><span class="arrow">=</span>
+  <div class="node hl"><b>Overall</b>&asymp; 0.258</div>
+</div>
+<p>Every stage looks reasonable on its own, yet the overall confidence is only about 26%. That isn&rsquo;t a flaw in the math: it honestly reflects that five uncertain choices compound. It is also why borderline choices should be stated as assumptions.</p>
+<p><b>Per-stage average.</b> To compare plans with different numbers of stages, the geometric mean is often reported: Conf<sup>1/5</sup> = e<sup>ln 0.258 / 5</sup> ≈ 0.76. It shows &ldquo;typical stage quality&rdquo; without penalizing long pipelines.</p>
+<div class="callout analogy" data-tag="Analogy">
+<p>A relay race of five runners who each have a 75&ndash;90% chance of a clean baton pass. Every handover seems safe, but the chance that <i>all five</i> are clean is well under half. One dropped baton ruins the race.</p>
+</div>
+
+<h3>Which stage should we clarify?</h3>
+<p>Asking the user to settle a stage raises that stage&rsquo;s p<sub>i</sub> to 1. The new overall confidence becomes Conf / p<sub>i</sub>, so the lowest p<sub>i</sub> gives the largest gain.</p>
+<table>
+<tr><th>Settle this stage</th><th>New Conf</th></tr>
+<tr class="win"><td>Source choice (0.66)</td><td>0.258 / 0.66 ≈ 0.391 ← largest gain</td></tr>
+<tr><td>Entity (0.69)</td><td>0.258 / 0.69 ≈ 0.374</td></tr>
+<tr><td>Join path (0.74)</td><td>0.258 / 0.74 ≈ 0.349</td></tr>
+<tr><td>Intent (0.90)</td><td>0.258 / 0.90 ≈ 0.287</td></tr>
+</table>
+<div class="callout key" data-tag="Rule"><p>Ask about the weakest link. One well-chosen clarifying question beats several vague ones.</p></div>
+<div class="widget" data-w="chain" data-title="Confidence chain: click a stage to clarify it"></div>
+
+<h3>When stages are not independent</h3>
+<p>If two stages depend on each other (for example, the entity choice makes a particular source more likely), the simple product under-counts confidence. The general form is the chain rule:</p>
+<div class="formula">P(all correct) = P(s₁) · P(s₂ | s₁) · P(s₃ | s₁, s₂) · …</div>
+</section>
+
+<section data-toc="5.5 Sanity checks">
+<h2><span class="n">5.5</span>Sanity checks: does the answer look plausible?</h2>
+<p>Even a well-built plan can produce an implausible number, often because of a join trap (Module 3, section 3.7) or a wrong filter. Sanity checks compare the answer with what we&rsquo;d expect.</p>
+<div class="callout analogy" data-tag="Analogy"><p>It is the &ldquo;does that smell right?&rdquo; check an accountant does before sending a report: is it close to last time&rsquo;s figure, is it wildly out of the usual range, and do the parts add up?</p></div>
+
+<h3>Check 1: Consistency with a reference value</h3>
+<p>If an independent reference A<sub>ref</sub> exists (a curated report, a different source), measure agreement:</p>
+<div class="formula">Consistency(A) = exp( −η · |A − A_ref| / |A_ref| )</div>
+<p>Example: A = $1.05M, A<sub>ref</sub> = $1.00M and η = 2. The relative gap is 5%.</p>
+<div class="formula">Consistency = exp(−2 × 0.05) = e^(−0.1) ≈ 0.905</div>
+<p>A 50% gap gives e<sup>−1</sup> ≈ 0.37: a strong signal that something differs, such as the definition, the filters or the time window.</p>
+<div class="widget" data-w="consistency" data-title="Consistency score: how far from the reference?"></div>
+
+<h3>Check 2: Robust outlier score</h3>
+<p>Compare the result with the history of the same metric. Plain z-scores are distorted by past outliers, so use the median and the median absolute deviation (MAD):</p>
+<div class="formula">modified z = 0.6745 · (x − median) / MAD          flag if |modified z| > 3.5</div>
+<p>Example: monthly revenue has a historical median of $1.00M and a MAD of $0.08M. The new result is $3.10M.</p>
+<div class="formula">modified z = 0.6745 × (3.10 − 1.00) / 0.08 = 0.6745 × 26.25 ≈ 17.7   ⇒  flag</div>
+<p>A value of about 3× normal is the classic signature of a fan-out join (Module 3).</p>
+<div class="callout plain" data-tag="In plain English"><p>&ldquo;MAD&rdquo; is the typical wiggle of the metric month to month. The modified z-score counts how many typical wiggles away the new number is. Beyond about 3.5 wiggles, something is probably wrong with the query, not the business.</p></div>
+<div class="widget" data-w="outlier" data-title="Robust outlier score (median &amp; MAD)"></div>
+
+<h3>Check 3: Structural invariants</h3>
+<p>These are rules that must always hold:</p>
+<table>
+<tr><th>Invariant</th><th>Violation suggests</th></tr>
+<tr><td>COUNT(DISTINCT customers) ≤ total customers</td><td>Duplicated rows</td></tr>
+<tr><td>Shares of a whole sum to ≈ 100%</td><td>Overlapping categories, or missing ones</td></tr>
+<tr><td>Non-negative measures stay ≥ 0</td><td>Sign errors, refunds mixed in</td></tr>
+<tr><td>Sub-totals add up to the total</td><td>Inconsistent filters across parts</td></tr>
+<tr><td>A rate stays between 0 and 1</td><td>Numerator and denominator at different grains</td></tr>
+</table>
+
+<h3>Updating confidence after a red flag</h3>
+<p>A failed check is evidence. Use Bayes&rsquo; rule to update the prior confidence:</p>
+<div class="formula">P(correct | flag) = P(flag | correct) · P(correct) / P(flag)</div>
+<p>Example: prior P(correct) = 0.8. Correct answers rarely trigger the flag, so P(flag | correct) = 0.02. Wrong answers often do, so P(flag | wrong) = 0.5.</p>
+<div class="formula">P(flag) = 0.02 × 0.8 + 0.5 × 0.2 = 0.016 + 0.100 = 0.116
+P(correct | flag) = 0.016 / 0.116 ≈ 0.14</div>
+<p>Confidence drops from 80% to 14%. The right response is to re-examine the plan, not to report the number.</p>
+<div class="callout analogy" data-tag="Analogy"><p>A smoke alarm that almost never goes off in a tidy kitchen (2%) but usually goes off when something is burning (50%). When it rings, you stop trusting &ldquo;everything is fine&rdquo; and go look, even if you were 80% sure dinner was fine.</p></div>
+<div class="widget" data-w="redflag" data-title="Red-flag Bayes update"></div>
+</section>
+
+<section data-toc="5.6 Two-stage retrieval">
+<h2><span class="n">5.6</span>Ranking and retrieval: two stages</h2>
+<p>There may be thousands of candidate sources or plans. Scoring each one in depth is too slow, so rankers work in two stages:</p>
+<div class="formula">Stage 1 (recall):     cheap score over everything      →  keep the top K   (e.g. K = 50)
+Stage 2 (precision):  rich score over those K only     →  final order</div>
+<div class="diagram"><svg viewBox="0 0 600 170" role="img" aria-label="Two-stage funnel: thousands of candidates to top K to final order">
+  <polygon points="20,20 250,45 250,125 20,150" fill="#faf7f0" stroke="#1a1815"/>
+  <polygon points="250,45 420,60 420,110 250,125" fill="#fdf3dc" stroke="#1a1815"/>
+  <polygon points="420,60 580,70 580,100 420,110" fill="#e6f3ec" stroke="#1a1815"/>
+  <g font-size="12" text-anchor="middle">
+    <text x="130" y="80" font-weight="700">Thousands of candidates</text><text x="130" y="98" fill="#6f685b">sources, plans</text>
+    <text x="335" y="82" font-weight="700">Stage 1: top K</text><text x="335" y="98" fill="#6f685b">cheap score, K = 50</text>
+    <text x="500" y="82" font-weight="700">Stage 2</text><text x="500" y="98" fill="#6f685b">rich score, final order</text>
+    <text x="335" y="150" fill="#e8481c" font-weight="700">anything cut here is gone for good</text>
+  </g>
+  <path d="M335 125 L335 136" stroke="#e8481c" stroke-width="2"/>
+</svg></div>
+<div class="callout analogy" data-tag="Analogy"><p>Hiring: a quick CV screen over 1,000 applicants picks 50 to interview (Stage 1, cheap and broad). The long interviews only happen with those 50 (Stage 2, rich and slow). If the CV screen drops the best person, no interview can bring them back.</p></div>
+
+<h3>Stage 1: retrieve broadly</h3>
+<ul>
+<li>Embedding nearest-neighbour search with cos(φ(Q), φ(d)) (Module 1), plus a keyword score.</li>
+<li>Approximate nearest-neighbour methods trade a little accuracy for very large speed-ups.</li>
+<li>The goal is not to miss anything relevant. It&rsquo;s measured by recall at K:</li>
+</ul>
+<div class="formula">Recall@K = | relevant items in top K | / | all relevant items |</div>
+<p>If Stage 1 misses a relevant item, Stage 2 can never recover it. Stage 1 errors are permanent.</p>
+
+<h3>Stage 2: re-rank precisely</h3>
+<p>Score each of the K survivors with a richer function of many features:</p>
+<div class="formula">r(Q, d) = f_θ( cos, BM25, concept coverage, prior P(d), field-match quality, value-validation pass, sanity score, … )</div>
+<p>The simplest form is linear, r = Σⱼ θⱼ · xⱼ. More expressive forms (trees, neural networks) capture interactions between features.</p>
+
+<h3>The trade-off</h3>
+<table>
+<tr><th>K</th><th>Effect</th></tr>
+<tr><td>Small</td><td>Fast, but Recall@K falls and good candidates are lost</td></tr>
+<tr><td>Large</td><td>Slow, but Stage 2 sees more good candidates</td></tr>
+</table>
+<p>Choose K as the smallest value at which Recall@K reaches a target, such as 95%.</p>
+<div class="widget" data-w="retrieval" data-title="Choosing K: recall versus cost (illustrative curve)"></div>
+</section>
+
+<section data-toc="5.7 Learning to rank">
+<h2><span class="n">5.7</span>Learning to rank</h2>
+<p>How do we choose the weights θ? We learn them from examples of good and bad rankings. There are three families of objectives.</p>
+<div class="callout plain" data-tag="In plain English"><p>Show the system many examples where humans said &ldquo;this one is better than that one&rdquo;, and nudge the weights until its scores agree. The three families differ in <i>what</i> they ask the system to get right: each score, each pair, or the whole list.</p></div>
+
+<h3>Pointwise: predict each item&rsquo;s relevance</h3>
+<div class="formula">ℒ = Σ_d ( r(Q, d) − label(d) )²       or cross-entropy for yes/no labels</div>
+<p>This is simple, but it optimizes absolute scores, while ranking only cares about order.</p>
+
+<h3>Pairwise: get pairs in the right order</h3>
+<p>For each pair (d⁺ more relevant than d⁻), penalize the ranker when d⁻ scores close to or above d⁺:</p>
+<div class="formula">ℒ_pair = log( 1 + exp( −( r(d⁺) − r(d⁻) ) ) )</div>
+<table>
+<tr><th>Scores</th><th class="num">Gap r(d⁺) − r(d⁻)</th><th>Loss</th></tr>
+<tr><td>r(d⁺) = 2, r(d⁻) = 1 (correct order)</td><td class="num">+1</td><td>ln(1 + e<sup>−1</sup>) ≈ 0.313</td></tr>
+<tr><td>r(d⁺) = 1, r(d⁻) = 1 (tied)</td><td class="num">0</td><td>ln 2 ≈ 0.693</td></tr>
+<tr><td>r(d⁺) = 1, r(d⁻) = 2 (wrong order)</td><td class="num">−1</td><td>ln(1 + e<sup>1</sup>) ≈ 1.313</td></tr>
+</table>
+<p>The loss shrinks smoothly as the correct item pulls ahead, and grows as the order flips.</p>
+<div class="widget" data-w="pairloss" data-title="Pairwise loss explorer"></div>
+
+<h3>Listwise: optimize the whole list</h3>
+<p>Treat the scores as a probability distribution over which item belongs at the top, and match it to the ideal distribution:</p>
+<div class="formula">P_θ(d at top) = softmax_d( r(Q, d) )
+ℒ_list = −Σ_d P_ideal(d) · log P_θ(d at top)</div>
+<p>Listwise methods most directly target metrics like nDCG (section 5.9), because they weight mistakes near the top more heavily.</p>
+<table>
+<tr><th>Family</th><th>Optimizes</th><th>Strength</th><th>Weakness</th></tr>
+<tr><td>Pointwise</td><td>Each score</td><td>Simple</td><td>Ignores order</td></tr>
+<tr><td>Pairwise</td><td>Pair order</td><td>Robust and intuitive</td><td>Treats all pairs equally</td></tr>
+<tr><td>Listwise</td><td>Whole list</td><td>Matches ranking metrics</td><td>More complex</td></tr>
+</table>
+</section>
+
+<section data-toc="5.8 Diversity (MMR)">
+<h2><span class="n">5.8</span>Diversity: maximal marginal relevance (MMR)</h2>
+<p>A ranking full of near-duplicates wastes the top positions. Three copies of the same table rank highly, but tell the user nothing new.</p>
+<h3>The MMR rule</h3>
+<ul>
+<li>λ = 1: pure relevance (no diversity)</li>
+<li>λ = 0: pure novelty (ignores relevance)</li>
+</ul>
+<p>Build the list one item at a time. Each pick balances relevance against similarity to what has already been chosen:</p>
+<div class="formula">next = argmax_{d ∉ S} [ λ · r(Q, d)  −  (1 − λ) · max_{s ∈ S} sim(d, s) ]</div>
+<p class="plainline">pick the item that is relevant but not a copy of something already on the list.</p>
+<div class="callout analogy" data-tag="Analogy"><p>Choosing a playlist for a road trip: you want the best songs, but not the same song three times in a row. Each new pick must be good <i>and</i> different from what is already queued.</p></div>
+
+<h3>Worked example (λ = 0.7)</h3>
+<table>
+<tr><th>Candidate</th><th class="num">r(Q, d)</th><th class="num">sim to d<sub>1</sub></th></tr>
+<tr><td>d<sub>1</sub> certified summary table</td><td class="num">0.90</td><td class="num">&mdash;</td></tr>
+<tr><td>d<sub>2</sub> copy of d<sub>1</sub> in another workspace</td><td class="num">0.88</td><td class="num">0.95</td></tr>
+<tr><td>d<sub>3</sub> detailed transaction table</td><td class="num">0.70</td><td class="num">0.20</td></tr>
+</table>
+<p><b>Pick 1:</b> nothing is selected yet, so choose the most relevant: d<sub>1</sub>.</p>
+<p><b>Pick 2:</b></p>
+<div class="formula">MMR(d₂) = 0.7 × 0.88 − 0.3 × 0.95 = 0.616 − 0.285 = 0.331
+MMR(d₃) = 0.7 × 0.70 − 0.3 × 0.20 = 0.490 − 0.060 = 0.430   ← chosen</div>
+<p>d<sub>3</sub> ranks second, ahead of the near-duplicate d<sub>2</sub>, even though d<sub>2</sub> is more relevant. The user now sees two genuinely different options: a summary and its detail.</p>
+<div class="widget" data-w="mmr" data-title="MMR: slide &lambda; and watch the order change"></div>
+</section>
+
+<section data-toc="5.9 Evaluating rankings">
+<h2><span class="n">5.9</span>Evaluating rankings</h2>
+<p>How do we know a ranker is good? Compare its output to human relevance judgments.</p>
+<h3>Precision and recall at k</h3>
+<div class="formula">Precision@k = relevant items in top k / k
+Recall@k    = relevant items in top k / all relevant items</div>
+<p>These metrics ignore order within the top k.</p>
+
+<h3>Mean reciprocal rank (MRR)</h3>
+<p>This measures how high the first relevant item appears, averaged over queries:</p>
+<div class="formula">MRR = (1 / |queries|) · Σ_q  1 / rank of first relevant item for q</div>
+<p>Example: across three queries, the first relevant item appears at ranks 1, 3 and 2.</p>
+<div class="formula">MRR = (1/1 + 1/3 + 1/2) / 3 = 1.833 / 3 ≈ 0.611</div>
+
+<h3>Normalized discounted cumulative gain (nDCG)</h3>
+<p>nDCG uses graded relevance (0 = irrelevant … 3 = perfect) and discounts items lower in the list:</p>
+<div class="formula">DCG@k  = Σᵢ₌₁ᵏ (2^{relᵢ} − 1) / log₂(i + 1)
+nDCG@k = DCG@k / IDCG@k         (IDCG = DCG of the ideal ordering; nDCG ∈ [0, 1])</div>
+<p>Example: the system returns relevance grades [2, 3, 0]. The ideal order is [3, 2, 0].</p>
+<div class="formula">DCG  = (2² − 1)/log₂2 + (2³ − 1)/log₂3 + 0 = 3/1 + 7/1.585 ≈ 3.000 + 4.417 = 7.417
+IDCG = (2³ − 1)/log₂2 + (2² − 1)/log₂3 + 0 = 7/1 + 3/1.585 ≈ 7.000 + 1.893 = 8.893
+nDCG@3 = 7.417 / 8.893 ≈ 0.834</div>
+<p>Putting the second-best item first costs about 17% of the ideal score. The exponential gain (2<sup>rel</sup> − 1) means that misplacing the best item hurts most.</p>
+<div class="callout plain" data-tag="In plain English"><p>nDCG gives big credit for putting great results near the top and shrinking credit for results further down. It then divides by the best score that was possible, so 1.0 means &ldquo;perfect order&rdquo;.</p></div>
+<table>
+<tr><th>Metric</th><th>Answers</th><th>Uses grades?</th><th>Order-aware?</th></tr>
+<tr><td>Precision@k</td><td>How much of the top k is relevant?</td><td>No</td><td>No</td></tr>
+<tr><td>Recall@k</td><td>How much of the relevant set did we find?</td><td>No</td><td>No</td></tr>
+<tr><td>MRR</td><td>How soon do we hit the first good item?</td><td>No</td><td>First hit only</td></tr>
+<tr><td>nDCG@k</td><td>How close is the order to ideal?</td><td>Yes</td><td>Yes</td></tr>
+</table>
+<div class="widget" data-w="metrics" data-title="Ranking metrics calculator: edit the relevance grades"></div>
+<div class="widget" data-w="mrr" data-title="Mean reciprocal rank across queries"></div>
+</section>
+
+<section data-toc="5.10 The candidate score">
+<h2><span class="n">5.10</span>Putting it together: the candidate score</h2>
+<p>For each candidate plan π (sources, joins, field matches, filters), combine everything from this module into one score:</p>
+<div class="formula">log Score(π) =   Σ_{(s,f) ∈ M*}  log P(f represents s)            ← field matching      (5.2)
+               + Σ_values log P(value valid in field)              ← value validation    (5.3)
+               + Σ_stages log pᵢ                                   ← stage confidence    (5.4)
+               + log Consistency(A_π) + log P(correct | checks)    ← sanity checks       (5.5)
+               + log r(Q, sources of π)                            ← retrieval rank      (5.6–5.7)</div>
+<p>The candidates are then ordered by score and diversified with MMR (5.8). The leading candidates go to Module 6, which selects the final answer.</p>
+<div class="cards">
+  <div class="card"><h5>5.2 Field matching</h5><p>Are the right columns used for each slot?</p></div>
+  <div class="card"><h5>5.3 Value validation</h5><p>Do the literals exist in those columns?</p></div>
+  <div class="card"><h5>5.4 Stage confidence</h5><p>How likely is every stage right at once?</p></div>
+  <div class="card"><h5>5.5 Sanity checks</h5><p>Does the number look plausible?</p></div>
+  <div class="card"><h5>5.6&ndash;5.7 Retrieval rank</h5><p>How well do the sources rank?</p></div>
+</div>
+<div class="callout plain" data-tag="In plain English"><p>Because each term is a log-probability, adding them is the same as multiplying the probabilities. A plan has to be good at <i>everything</i>: a plan that is perfect on four terms and terrible on one still scores badly.</p></div>
+</section>
+
+<section data-toc="5.11 Common pitfalls">
+<h2><span class="n">5.11</span>Common pitfalls</h2>
+<table class="pitfalls">
+<tr><th>Pitfall</th><th>Symptom</th><th>Fix in the math</th></tr>
+<tr><td>Greedy field matching</td><td>One slot gets a nonsense field</td><td>Hungarian / global maximum matching</td></tr>
+<tr><td>Ignoring field types</td><td>Summing a text column, filtering a number with text</td><td>w = −∞ for incompatible types</td></tr>
+<tr><td>No value validation</td><td>Empty results, or silently wrong rows</td><td>Exact → normalized → fuzzy lookup</td></tr>
+<tr><td>Reading each stage&rsquo;s confidence alone</td><td>Overconfident overall answer</td><td>Multiply stages; clarify the weakest link</td></tr>
+<tr><td>Skipping sanity checks</td><td>Reporting a 3× fan-out number</td><td>Robust z-scores, invariants, Bayesian update</td></tr>
+<tr><td>Stage 1 K too small</td><td>Best source never considered</td><td>Choose K by a Recall@K target</td></tr>
+<tr><td>Pointwise-only training</td><td>Good scores, poor ordering</td><td>Pairwise or listwise objectives</td></tr>
+<tr><td>Near-duplicates at the top</td><td>Same table listed three times</td><td>MMR diversity</td></tr>
+<tr><td>Evaluating only by precision</td><td>Good items buried at rank 5</td><td>nDCG / MRR (order-aware)</td></tr>
+</table>
+</section>
+
+<section data-toc="Check your understanding">
+<h2>Check your understanding</h2>
+<div class="check"><ol>
+<li><span class="q"><b>Compute:</b> w(A, x) = 0.6, w(A, y) = 0.5, w(B, x) = 0.55 and w(B, y) = 0.2. What totals do greedy and optimal matching give?</span><span class="a">Greedy: A → x (0.6), then B → y (0.2), giving 0.80. Optimal: A → y (0.5) and B → x (0.55), giving 1.05.</span></li>
+<li><span class="q"><b>Compute:</b> three stages have confidences 0.9, 0.8 and 0.5. What is the overall confidence, and what does it become after clarifying the weakest stage?</span><span class="a">0.9 × 0.8 × 0.5 = 0.36. Clarifying the 0.5 stage gives 0.36 / 0.5 = 0.72.</span></li>
+<li><span class="q"><b>Compute:</b> what is the pairwise loss when r(d⁺) = r(d⁻)?</span><span class="a">ln(1 + e<sup>0</sup>) = ln 2 ≈ 0.693.</span></li>
+<li><span class="q"><b>Compute:</b> the relevance grades in rank order are [0, 3]. What is nDCG@2?</span><span class="a">DCG = 0 + 7 / log<sub>2</sub> 3 ≈ 4.417. IDCG = 7 / 1 + 0 = 7. nDCG = 4.417 / 7 ≈ 0.631.</span></li>
+<li><span class="q"><b>Compute:</b> for two queries, the first relevant item appears at rank 2 and rank 4. What is the MRR?</span><span class="a">(1/2 + 1/4) / 2 = 0.375.</span></li>
+<li><span class="q"><b>Reason:</b> why might each stage look reliable while the overall answer is still uncertain?</span><span class="a">Confidence multiplies across stages. Five stages that are each about 75&ndash;90% reliable can combine to well under 50%, because an error at any stage spoils the final answer.</span></li>
+</ol></div>
+</section>
+
+<section data-toc="Key takeaways">
+<h2>Key takeaways</h2>
+<ul class="takeaways">
+<li>Field matching is a global assignment problem. The Hungarian algorithm beats greedy picking, and log-probability weights turn it into joint probability.</li>
+<li>Validate every value against the data, and infer unknown columns with Bayes&rsquo; rule. An empty result means a filter is wrong.</li>
+<li>Confidence compounds: multiply across stages, and ask about the weakest link.</li>
+<li>Sanity checks are evidence. A failed check can rightly collapse confidence through Bayes&rsquo; rule.</li>
+<li>Retrieval runs in two stages: recall first (errors there are permanent), then precision.</li>
+<li>Learning to rank should optimize order, through pairwise or listwise objectives.</li>
+<li>MMR keeps near-duplicates from crowding the top, and nDCG and MRR judge rankings by order, not just membership.</li>
+</ul>
+<div class="next"><h4>Coming next: Module 6, Answer Selection and the Full Pipeline</h4><p>With ranked, validated candidates in hand, how is the final answer chosen? We&rsquo;ll cover expected utility, hard constraints, satisficing all the user&rsquo;s filters at once, abstention and clarification as decisions, choosing how to present the answer, and a complete worked example that runs one question through all six modules.</p></div>
+</section>
+
+</main>
+<script src="modules.js"></script>
+<script src="lib.js"></script>
+<script src="w5.js"></script>
+</body>
+</html>

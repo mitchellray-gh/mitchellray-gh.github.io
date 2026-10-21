@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Module 4 | Training</title>
+<link rel="stylesheet" href="lesson.css">
+<style>
+.bio{display:flex;flex-wrap:wrap;gap:.5rem;margin:1rem 0}
+.bio .tk{display:flex;flex-direction:column;align-items:center;gap:.25rem;font-family:var(--mono);font-size:.85rem}
+.bio .tk b{display:block;padding:.2rem .6rem;border:1px solid var(--rule);background:var(--surface)}
+.bio .tk small{font-size:.68rem;font-weight:700;padding:.05rem .35rem;color:#fff;background:#6f685b}
+.bio .tk.num b{background:#fdf3dc;border-color:#c98a00}.bio .tk.num small{background:#c98a00}
+.bio .tk.loc b{background:#e6f3ec;border-color:#1f7a52}.bio .tk.loc small{background:#1f7a52}
+.bio .tk.typ b{background:#e4f0f5;border-color:#1f6f8b}.bio .tk.typ small{background:#1f6f8b}
+.bio .tk.met b{background:#fbe9e3;border-color:#e8481c}.bio .tk.met small{background:#e8481c}
+.bio .tk.tim b{background:#efe6f5;border-color:#7a4a9b}.bio .tk.tim small{background:#7a4a9b}
+.bio .tk.o small{background:transparent;color:#6f685b;border:1px dashed #b9b2a2}
+.slots{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.6rem;margin:1rem 0}
+.slots div{border:1px dashed #6f685b;padding:.5rem .7rem;background:var(--surface);font-size:.85rem}
+.slots div b{display:block;font-family:var(--mono);font-size:.72rem;text-transform:uppercase;color:#6f685b}
+.slots div.ok{border-style:solid;border-color:#1f7a52}
+</style>
+</head>
+<body data-module="4">
+<main id="lesson">
+
+<section data-toc="Learning objectives">
+<h2>Learning objectives</h2>
+<p>By the end of this module, you should be able to:</p>
+<ol>
+<li>Classify a question&rsquo;s intent with Bayesian and softmax models, including questions with more than one intent.</li>
+<li>Map an intent to a structural template with slots to fill.</li>
+<li>Choose the right aggregation operator from the user&rsquo;s words, and avoid the average-of-averages trap.</li>
+<li>Resolve relative time expressions into exact intervals.</li>
+<li>Detect mentions in a question and tag them by type.</li>
+<li>Score and link each mention to a specific entity, and resolve several mentions jointly.</li>
+<li>Decide when to abstain (NIL) and check whether confidence is calibrated.</li>
+</ol>
+</section>
+
+<section data-toc="4.1 The problem">
+<h2><span class="n">4.1</span>The problem: two questions inside every question</h2>
+<p>Consider: &ldquo;What were the top 5 Paris stores by revenue last quarter?&rdquo;</p>
+<p>Before any data is touched, two things must be decided:</p>
+<table>
+<tr><th>Question</th><th>Answer for the example</th><th>Method</th></tr>
+<tr><td>What kind of answer? (<b>intent</b>)</td><td>A ranking: top-N items ordered by a measure</td><td>Intent classification (4.2&ndash;4.5)</td></tr>
+<tr><td>About which things? (<b>entities</b>)</td><td>Paris = which Paris? Last quarter = which dates?</td><td>Mention detection and entity linking (4.6&ndash;4.10)</td></tr>
+</table>
+<p>Modules 1&ndash;3 found where the data lives. This module decides what <b>shape</b> the answer takes and which <b>rows</b> it covers.</p>
+<div class="callout plain" data-tag="In plain English">
+<p>Two jobs. First: &ldquo;is the person after a number, a list, a chart, or an explanation?&rdquo; Second: &ldquo;when they say <i>Paris</i> or <i>last quarter</i>, exactly which Paris and which dates?&rdquo;</p></div>
+<div class="callout analogy" data-tag="Analogy">
+<p>A restaurant waiter hears &ldquo;the usual, but spicy&rdquo;. They must work out the <i>kind</i> of order (a meal, not a drink) and <i>which</i> usual (this customer&rsquo;s, not the one at the next table).</p></div>
+<div class="flow">
+  <div class="node hl"><b>Question</b>&ldquo;top 5 Paris stores by revenue last quarter&rdquo;</div><span class="arrow">&rarr;</span>
+  <div class="node"><b>Intent</b>rank<br><small>4.2&ndash;4.5</small></div><span class="arrow">+</span>
+  <div class="node"><b>Entities</b>Paris, last quarter<br><small>4.6&ndash;4.10</small></div><span class="arrow">&rarr;</span>
+  <div class="node"><b>Parse</b>shape + rows<br><small>4.11</small></div>
+</div>
+</section>
+
+<section data-toc="4.2 The intent space">
+<h2><span class="n">4.2</span>The intent space</h2>
+<p>Define a finite set of intents:</p>
+<div class="formula">K = { lookup, count, aggregate, trend, compare, rank, distribution, explain }</div>
+<table>
+<tr><th>Intent</th><th>Typical phrasing</th><th>Answer shape</th></tr>
+<tr><td>lookup</td><td>&ldquo;What is X for Y?&rdquo;</td><td>A single value</td></tr>
+<tr><td>count</td><td>&ldquo;How many&hellip;?&rdquo;</td><td>A single integer</td></tr>
+<tr><td>aggregate</td><td>&ldquo;Total / average X by Y&rdquo;</td><td>Value per group</td></tr>
+<tr><td>trend</td><td>&ldquo;How has X changed over time?&rdquo;</td><td>Time series</td></tr>
+<tr><td>compare</td><td>&ldquo;X vs Y&rdquo;, &ldquo;compared to last year&rdquo;</td><td>Paired values and a difference</td></tr>
+<tr><td>rank</td><td>&ldquo;Top / bottom N&rdquo;, &ldquo;best&rdquo;, &ldquo;worst&rdquo;</td><td>Ordered list</td></tr>
+<tr><td>distribution</td><td>&ldquo;Spread / breakdown of X&rdquo;</td><td>Histogram or shares</td></tr>
+<tr><td>explain</td><td>&ldquo;Why did X drop?&rdquo;</td><td>Decomposition of a change</td></tr>
+</table>
+<div class="cards">
+  <div class="card"><h5>lookup / count</h5><p>One number</p><p class="dim">a single value or integer</p></div>
+  <div class="card"><h5>aggregate / distribution</h5><p>Many numbers, grouped</p><p class="dim">value per group, histogram or shares</p></div>
+  <div class="card"><h5>trend / compare</h5><p>Numbers over time or side by side</p><p class="dim">time series, or paired values plus a difference</p></div>
+  <div class="card"><h5>rank / explain</h5><p>Ordered list / breakdown of a change</p><p class="dim">top-N list, or decomposition</p></div>
+</div>
+<h3>Single-label vs. multi-label</h3>
+<p>Some questions carry more than one intent. &ldquo;Why did revenue drop last month compared to the month before?&rdquo; is both <b>explain</b> and <b>compare</b>.</p>
+<ul>
+<li><b>Single-label:</b> pick one intent, so probabilities sum to 1. Use <b>softmax</b>.</li>
+<li><b>Multi-label:</b> each intent is an independent yes/no, so probabilities don&rsquo;t sum to 1. Use one <b>sigmoid</b> per intent.</li>
+</ul>
+<div class="formula">Single:  P(k | Q) = softmax_k( W_k &middot; q + b_k )
+Multi:   P(k &isin; Q) = &sigma;( W_k &middot; q + b_k )       include intent k if P &gt; 0.5</div>
+<div class="callout plain" data-tag="In plain English">
+<p>Softmax is a <i>single-choice</i> exam: the options compete for one share of 100%. Sigmoids are a <i>tick-all-that-apply</i> form: every box gets its own independent chance.</p></div>
+<div class="widget" data-w="multilabel" data-title="Softmax vs. sigmoids: one intent or several?"></div>
+</section>
+
+<section data-toc="4.3 Bayesian intent">
+<h2><span class="n">4.3</span>Classifying intent: a Bayesian view</h2>
+<p>The simplest interpretable classifier is <b>naive Bayes</b> over cue words:</p>
+<div class="formula">P(k | Q) &prop; P(k) &middot; &Pi;_{t &isin; Q} P(t | k)</div>
+<p class="plainline">how likely is each intent before reading the words (the prior), multiplied by how typical each cue word is for that intent.</p>
+<p>The &ldquo;naive&rdquo; assumption is that cue words are independent given the intent. That is false in general, but often good enough to rank intents correctly.</p>
+<div class="worked"><h4>Worked example</h4>
+<p>Question: &ldquo;top 5 regions by revenue&rdquo;. The cue words are &ldquo;top&rdquo; and &ldquo;by&rdquo;.</p>
+<table>
+<tr><th>Intent k</th><th>Prior P(k)</th><th>P(&ldquo;top&rdquo; | k)</th><th>P(&ldquo;by&rdquo; | k)</th><th>Product</th></tr>
+<tr class="win"><td>rank</td><td class="num">0.30</td><td class="num">0.30</td><td class="num">0.20</td><td class="num">0.30 &times; 0.30 &times; 0.20 = 0.0180</td></tr>
+<tr><td>trend</td><td class="num">0.30</td><td class="num">0.02</td><td class="num">0.15</td><td class="num">0.30 &times; 0.02 &times; 0.15 = 0.0009</td></tr>
+<tr><td>lookup</td><td class="num">0.40</td><td class="num">0.03</td><td class="num">0.10</td><td class="num">0.40 &times; 0.03 &times; 0.10 = 0.0012</td></tr>
+</table>
+<p>The normalizer is 0.0180 + 0.0009 + 0.0012 = 0.0201.</p>
+<div class="formula">P(rank | Q)   = 0.0180 / 0.0201 &asymp; 0.896
+P(trend | Q)  = 0.0009 / 0.0201 &asymp; 0.045
+P(lookup | Q) = 0.0012 / 0.0201 &asymp; 0.060</div>
+<p>Rank wins decisively, driven mostly by &ldquo;top&rdquo;. The word &ldquo;by&rdquo; appears in many intents, so it carries little information.</p></div>
+<div class="widget" data-w="nbayes" data-title="Naive Bayes: toggle cue words, watch the posterior"></div>
+<p><b>Information per cue word.</b> A word&rsquo;s usefulness is how much it shifts the odds between intents: log [ P(t | k<sub>1</sub>) / P(t | k<sub>2</sub>) ]. For &ldquo;top&rdquo;, rank vs. trend gives log(0.30 / 0.02) &asymp; 2.7 nats, a strong cue. For &ldquo;by&rdquo;, it gives log(0.20 / 0.15) &asymp; 0.29 nats, a weak one.</p>
+<div class="callout key" data-tag="Check the maths">
+<p>ln(15) = 2.708 and ln(4/3) = 0.288, matching the module&rsquo;s 2.7 and 0.29. The widget prints the same numbers per selected word.</p></div>
+<div class="callout plain" data-tag="In plain English">
+<p>A cue word is useful only if it is much more common in one intent than another. &ldquo;Top&rdquo; is a loud signal for ranking; &ldquo;by&rdquo; shows up everywhere, so it is nearly noise.</p></div>
+<div class="callout analogy" data-tag="Analogy">
+<p>Like a doctor weighing symptoms: &ldquo;fever&rdquo; points firmly to a few illnesses, while &ldquo;feels tired&rdquo; fits nearly all of them and barely moves the diagnosis.</p></div>
+<h3>Beyond word counts</h3>
+<p>Modern classifiers replace the cue-word table with an embedding q = &phi;(Q), so paraphrases such as &ldquo;highest-performing&rdquo;, &ldquo;leading&rdquo; and &ldquo;best&rdquo; land near &ldquo;top&rdquo; automatically. The Bayesian structure, a prior times evidence, stays the same.</p>
+</section>
+
+<section data-toc="4.4 Intent to template">
+<h2><span class="n">4.4</span>From intent to template</h2>
+<p>Each intent implies a <b>template</b>: a skeleton with slots that the rest of the pipeline must fill.</p>
+<div class="formula">template(rank)    = &lang; measure, dimension, order direction, N, filters &rang;
+template(trend)   = &lang; measure, time grain, time range, filters &rang;
+template(compare) = &lang; measure, side A, side B, difference type &rang;
+template(explain) = &lang; measure, period&#8320;, period&#8321;, candidate drivers &rang;</div>
+<h3>Example: &ldquo;top 5 Paris stores by revenue last quarter&rdquo;</h3>
+<table>
+<tr><th>Slot</th><th>Filled value</th><th>Source</th></tr>
+<tr><td>measure</td><td>Revenue</td><td>Concept mapping (Module 2)</td></tr>
+<tr><td>dimension</td><td>Store</td><td>Mention &ldquo;stores&rdquo;</td></tr>
+<tr><td>order direction</td><td>Descending</td><td>&ldquo;top&rdquo;</td></tr>
+<tr><td>N</td><td>5</td><td>Number in the question</td></tr>
+<tr><td>filter: location</td><td>Paris &rarr; which one?</td><td>Entity linking (4.8)</td></tr>
+<tr><td>filter: time</td><td>Last quarter &rarr; which dates?</td><td>Time resolution (4.6)</td></tr>
+</table>
+<div class="slots" aria-label="Template rank with slots">
+  <div class="ok"><b>measure</b>Revenue</div><div class="ok"><b>dimension</b>Store</div><div class="ok"><b>order</b>Descending</div><div class="ok"><b>N</b>5</div><div><b>filter: location</b>Paris &rarr; ?</div><div><b>filter: time</b>last quarter &rarr; ?</div>
+</div>
+<p class="mini">Solid green slots are already filled; dashed slots still need entity linking (4.8) and time resolution (4.6).</p>
+<div class="callout analogy" data-tag="Analogy">
+<p>A template is a paper form. Choosing the intent picks the form (&ldquo;ranking request&rdquo;); the rest of the pipeline fills in each blank. An unfilled required blank means the form cannot be submitted.</p></div>
+<h3>Slot completeness</h3>
+<div class="formula">complete(template) = 1  &hArr;  every required slot is filled with confidence &ge; &tau;</div>
+<p>When a required slot is empty, fill it with a prior if it&rsquo;s low-risk (Module 3, section 3.9), or ask the user.</p>
+<h3>The &ldquo;explain&rdquo; template is a decomposition</h3>
+<p>For &ldquo;why did X change?&rdquo;, the answer splits the total change into contributions from each segment s:</p>
+<div class="formula">&Delta;X = X&#8321; &minus; X&#8320; = &Sigma;_s (X&#8321;,s &minus; X&#8320;,s) = &Sigma;_s &Delta;_s
+share_s = &Delta;_s / &Delta;X           &larr; fraction of the change caused by segment s</div>
+<p>Example: revenue fell by $100k. The North region accounts for &minus;$80k, and the rest is spread thinly, so North&rsquo;s share is 80% of the drop.</p>
+<div class="callout plain" data-tag="In plain English">
+<p>&ldquo;Why did it drop?&rdquo; becomes &ldquo;which pieces fell, and how much of the total fall does each piece explain?&rdquo; The shares add up to 100%.</p></div>
+<div class="widget" data-w="explainwf" data-title="Explain intent: decompose a change into segment contributions"></div>
+</section>
+
+<section data-toc="4.5 Aggregation operator">
+<h2><span class="n">4.5</span>Choosing the aggregation operator</h2>
+<p>The operator comes from the <b>modifier words</b> in the question, not from the column name. A column called <code>avg_price</code> still needs SUM when the user asks for &ldquo;total&rdquo;.</p>
+<div class="formula">op* = argmax_{op}  P(op | modifier words in Q)</div>
+<table>
+<tr><th>Modifier cue</th><th>Operator</th></tr>
+<tr><td>&ldquo;total&rdquo;, &ldquo;overall&rdquo;, &ldquo;sum of&rdquo;</td><td>SUM</td></tr>
+<tr><td>&ldquo;average&rdquo;, &ldquo;mean&rdquo;, &ldquo;typical&rdquo;, &ldquo;per&rdquo;</td><td>AVG (weighted, see below)</td></tr>
+<tr><td>&ldquo;highest&rdquo;, &ldquo;largest&rdquo;, &ldquo;peak&rdquo;, &ldquo;maximum&rdquo;</td><td>MAX</td></tr>
+<tr><td>&ldquo;lowest&rdquo;, &ldquo;smallest&rdquo;, &ldquo;minimum&rdquo;</td><td>MIN</td></tr>
+<tr><td>&ldquo;how many [entities]&rdquo;</td><td>COUNT DISTINCT entity</td></tr>
+<tr><td>&ldquo;how many [records / transactions]&rdquo;</td><td>COUNT rows</td></tr>
+<tr><td>&ldquo;median&rdquo;, &ldquo;middle&rdquo;</td><td>PERCENTILE 0.5</td></tr>
+</table>
+<h3>Pitfall 1: rows vs. entities</h3>
+<p>&ldquo;How many customers placed orders?&rdquo; There are 10 order rows from 4 distinct customers.</p>
+<div class="formula">COUNT(rows)                = 10   &#10007;  (counts orders)
+COUNT(DISTINCT customer)   = 4    &#10003;  (counts customers)</div>
+<p>The noun after &ldquo;how many&rdquo; decides which entity is counted.</p>
+<div class="callout analogy" data-tag="Analogy">
+<p>Counting people in a shop by counting receipts: someone who bought four times gets counted four times. Counting <i>distinct</i> customers is counting faces, not receipts.</p></div>
+<div class="widget" data-w="aggop" data-title="Pick the operator from the words, and count rows vs. entities"></div>
+<h3>Pitfall 2: average of averages</h3>
+<table>
+<tr><th>Region</th><th>Orders</th><th>Average order value</th></tr>
+<tr><td>A</td><td class="num">10</td><td class="num">$100</td></tr>
+<tr><td>B</td><td class="num">90</td><td class="num">$200</td></tr>
+</table>
+<div class="formula">Naive:     (100 + 200) / 2                     = $150   &#10007;
+Weighted:  (10 &times; 100 + 90 &times; 200) / (10 + 90)
+         = (1,000 + 18,000) / 100              = $190   &#10003;</div>
+<p>In general:</p>
+<div class="formula">true average = &Sigma;_g n_g &middot; avg_g / &Sigma;_g n_g       (weight each group by its size)</div>
+<div class="callout plain" data-tag="In plain English">
+<p>Region B has nine times as many orders, so it must count nine times as much. A plain mean of the two averages pretends both regions are the same size.</p></div>
+<div class="widget" data-w="avgavg" data-title="Average of averages: naive vs. weighted"></div>
+<div class="callout warn" data-tag="Rule">
+<p><b>Rule:</b> averages, ratios and percentages are not additive. Re-compute them from their parts, &Sigma; numerator / &Sigma; denominator, never by averaging pre-computed averages.</p></div>
+</section>
+
+<section data-toc="4.6 Time expressions">
+<h2><span class="n">4.6</span>Resolving time expressions</h2>
+<p>Relative phrases need an <b>anchor date</b> (today) and a <b>calendar convention</b> to become exact intervals. We use <b>half-open intervals</b> [start, end), so adjacent periods never overlap or leave gaps.</p>
+<p>Suppose today is 2026-10-21 and the calendar is a standard calendar year:</p>
+<table>
+<tr><th>Phrase</th><th>Interval</th></tr>
+<tr><td>&ldquo;last quarter&rdquo;</td><td>[2026-07-01, 2026-10-01): Q3 2026</td></tr>
+<tr><td>&ldquo;last month&rdquo;</td><td>[2026-09-01, 2026-10-01)</td></tr>
+<tr><td>&ldquo;year to date&rdquo;</td><td>[2026-01-01, 2026-10-22)</td></tr>
+<tr><td>&ldquo;last 30 days&rdquo;</td><td>[2026-09-21, 2026-10-21), or up to 10-22 if today counts</td></tr>
+<tr><td>&ldquo;same quarter last year&rdquo;</td><td>[2025-07-01, 2025-10-01)</td></tr>
+</table>
+<div class="callout analogy" data-tag="Analogy">
+<p>Half-open intervals work like floor numbering: &ldquo;1st floor up to, but not including, the 2nd&rdquo; means two neighbouring floors never share a ceiling slab or leave a gap.</p></div>
+<h3>Ambiguity is real</h3>
+<p>These are latent variables, as in Module 3:</p>
+<div class="formula">interval* = argmax_I  P(I | phrase, convention, intent)</div>
+<ul>
+<li><b>Fiscal vs. calendar:</b> if the fiscal year starts on 1 February, &ldquo;last quarter&rdquo; is a different interval.</li>
+<li><b>Complete vs. partial:</b> does &ldquo;this month&rdquo; include today&rsquo;s incomplete data?</li>
+<li><b>Rolling vs. calendar:</b> &ldquo;last 3 months&rdquo; can mean the previous three full months or the trailing 90 days.</li>
+</ul>
+<p>A <b>trend</b> intent prefers complete periods, so the last partial month doesn&rsquo;t create a fake drop. A lookup of &ldquo;this month so far&rdquo; accepts a partial period.</p>
+<div class="widget" data-w="timeres" data-title="Time resolver: today + phrase + convention = exact interval"></div>
+<div class="callout note" data-tag="Try it">
+<p>With the fiscal year starting 1 February, today 2026-10-21 falls in the quarter Aug&ndash;Oct, so &ldquo;last quarter&rdquo; becomes [2026-05-01, 2026-08-01) instead of the calendar answer [2026-07-01, 2026-10-01).</p></div>
+<div class="callout warn" data-tag="Fake-drop trap">
+<p><b>Fake-drop trap:</b> comparing a partial current period with a full previous one makes almost every metric look like it fell. A month that is 21 of 31 days complete shows about a 32% &ldquo;drop&rdquo; even at a perfectly steady rate (1 &minus; 21/31 &asymp; 0.32).</p></div>
+<div class="widget" data-w="fakedrop" data-title="The fake drop from a partial period"></div>
+</section>
+
+<section data-toc="4.7 Detecting mentions">
+<h2><span class="n">4.7</span>Detecting mentions</h2>
+<p>A <b>mention</b> is a span of words that refers to something resolvable: a metric, an entity value, an entity type, a time or a number.</p>
+<p>Example: &ldquo;top 5 Paris stores by revenue last quarter&rdquo;</p>
+<table>
+<tr><th>Span</th><th>Type</th></tr>
+<tr><td>&ldquo;5&rdquo;</td><td>NUMBER (N for top-N)</td></tr>
+<tr><td>&ldquo;Paris&rdquo;</td><td>ENTITY VALUE (location)</td></tr>
+<tr><td>&ldquo;stores&rdquo;</td><td>ENTITY TYPE</td></tr>
+<tr><td>&ldquo;revenue&rdquo;</td><td>METRIC</td></tr>
+<tr><td>&ldquo;last quarter&rdquo;</td><td>TIME</td></tr>
+</table>
+<h3>Sequence tagging (BIO scheme)</h3>
+<p>Each token gets a tag: <b>B-type</b> (beginning of a span), <b>I-type</b> (inside a span) or <b>O</b> (outside any span).</p>
+<div class="bio" role="img" aria-label="BIO tagging of the example question">
+  <div class="tk o"><b>top</b><small>O</small></div>
+  <div class="tk num"><b>5</b><small>B-NUM</small></div>
+  <div class="tk loc"><b>Paris</b><small>B-LOC</small></div>
+  <div class="tk typ"><b>stores</b><small>B-TYPE</small></div>
+  <div class="tk o"><b>by</b><small>O</small></div>
+  <div class="tk met"><b>revenue</b><small>B-METRIC</small></div>
+  <div class="tk tim"><b>last</b><small>B-TIME</small></div>
+  <div class="tk tim"><b>quarter</b><small>I-TIME</small></div>
+</div>
+<div class="formula">top   5      Paris   stores   by   revenue    last     quarter
+O     B-NUM  B-LOC   B-TYPE   O    B-METRIC   B-TIME   I-TIME</div>
+<p>The most likely tag sequence y* is the one with the best total score, found with the <b>Viterbi algorithm</b>:</p>
+<div class="formula">y* = argmax_y  &Sigma;&#7522; [ emit(x&#7522;, y&#7522;) + trans(y&#7522;&#8331;&#8321;, y&#7522;) ]</div>
+<p>The transition scores enforce consistency. For example, I-TIME can only follow B-TIME or I-TIME, never O.</p>
+<div class="callout plain" data-tag="In plain English">
+<p>Highlight the important phrases and colour each by what it is. &ldquo;B&rdquo; marks where a highlight begins, &ldquo;I&rdquo; marks that it continues, and &ldquo;O&rdquo; marks words you leave unhighlighted. The <i>emit</i> score asks &ldquo;does this word look like this tag?&rdquo; and the <i>trans</i> score asks &ldquo;may this tag follow the previous one?&rdquo;</p></div>
+</section>
+
+<section data-toc="4.8 Linking to entities">
+<h2><span class="n">4.8</span>Linking mentions to entities</h2>
+<p>Each detected mention m must resolve to a concrete entity e from a set of candidates E(m).</p>
+<h3>Step 1: Generate candidates</h3>
+<p>Gather plausible entities using the lexical and semantic matching from Module 2: exact matches, near spellings and known aliases. Keep the top few (|E(m)| &asymp; 5&ndash;20).</p>
+<h3>Step 2: Score each candidate</h3>
+<div class="formula">score(m, e) = &theta;&#8321; &middot; sim_lex(m, e)          &larr; spelling match
+            + &theta;&#8322; &middot; P(e | m)               &larr; prior: how often m refers to e
+            + &theta;&#8323; &middot; type_fit(e, slot)      &larr; does e have the type the template expects?
+            + &theta;&#8324; &middot; coherence(e, Q)        &larr; fit with the other concepts in the question</div>
+<div class="worked"><h4>Worked example: which &ldquo;Paris&rdquo;?</h4>
+<p>Question: &ldquo;top 5 Paris stores by revenue&rdquo;. The template expects a location, because the word &ldquo;stores&rdquo; signals a place filter.</p>
+<p>Weights: &theta; = (1, 1, 2, 1). Type fit counts double.</p>
+<table>
+<tr><th>Candidate e</th><th>sim_lex</th><th>P(e | m)</th><th>type_fit</th><th>coherence</th><th>score</th></tr>
+<tr class="win"><td>Paris, France (city)</td><td class="num">1.0</td><td class="num">0.6</td><td class="num">1.0</td><td class="num">0.8</td><td class="num">1.0 + 0.6 + 2.0 + 0.8 = 4.4</td></tr>
+<tr><td>Paris, Texas (city)</td><td class="num">1.0</td><td class="num">0.1</td><td class="num">1.0</td><td class="num">0.3</td><td class="num">1.0 + 0.1 + 2.0 + 0.3 = 3.4</td></tr>
+<tr class="lose"><td>Paris Retail Ltd (customer)</td><td class="num">0.7</td><td class="num">0.2</td><td class="num">0.2</td><td class="num">0.2</td><td class="num">0.7 + 0.2 + 0.4 + 0.2 = 1.5</td></tr>
+<tr class="lose"><td>&ldquo;Paris&rdquo; perfume line (product)</td><td class="num">0.6</td><td class="num">0.1</td><td class="num">0.0</td><td class="num">0.1</td><td class="num">0.6 + 0.1 + 0.0 + 0.1 = 0.8</td></tr>
+</table>
+<p>Softmax (T = 1):</p>
+<div class="formula">e^4.4 &asymp; 81.45    e^3.4 &asymp; 29.96    e^1.5 &asymp; 4.48    e^0.8 &asymp; 2.23     &Sigma; &asymp; 118.12
+P(Paris, France) &asymp; 0.690
+P(Paris, Texas)  &asymp; 0.254
+P(Paris Retail)  &asymp; 0.038
+P(Paris perfume) &asymp; 0.019</div>
+<p>Decision rule (&tau; = 0.6, &delta; = 0.2 from Module 2): P = 0.69 &ge; 0.6, and the margin 0.69 &minus; 0.25 = 0.44 &ge; 0.2, so accept <b>Paris, France</b>.</p></div>
+<div class="callout plain" data-tag="In plain English">
+<p>Give every possible &ldquo;Paris&rdquo; points for spelling, popularity, being the right kind of thing (a place, since the question says &ldquo;stores&rdquo;), and fitting the rest of the question. Convert points to probabilities with softmax, then only accept the winner if it is both confident (&ge; &tau;) and clearly ahead of the runner-up (&ge; &delta;).</p></div>
+<div class="callout analogy" data-tag="Analogy">
+<p>Like a post office sorting a letter addressed to just &ldquo;Paris&rdquo;: the postcode (type), the sender&rsquo;s usual destinations (prior) and the rest of the address (context) decide where it goes.</p></div>
+<h3>Step 3: Check against the data</h3>
+<p>A link is only useful if the entity actually appears in the relevant data. Update with the evidence that stores exist there:</p>
+<div class="formula">P(e | m, data) &prop; P(e | m) &middot; P(stores exist at e)</div>
+<p>If the store data held 12 stores in Paris, France and 0 in Paris, Texas, the Texas candidate would drop to about zero. If the reverse were true, the decision would flip. The data has the final say.</p>
+<div class="widget" data-w="entlink" data-title="Entity linking: edit the weights and features, then check the data"></div>
+</section>
+
+<section data-toc="4.9 Joint resolution">
+<h2><span class="n">4.9</span>Resolving several mentions jointly</h2>
+<p>When a question has several ambiguous mentions, resolving them one at a time can produce incoherent combinations. Resolve them together:</p>
+<div class="formula">(&ecirc;&#8321;, &hellip;, &ecirc;&#11388;) = argmax_{e&#8321;&hellip;e&#11388;}  &Sigma;&#7522; score(m&#7522;, e&#7522;)  +  &Sigma;_{i&lt;l} &psi;(e&#7522;, e_l)</div>
+<p>Here &psi;(e<sub>i</sub>, e<sub>l</sub>) is a pairwise compatibility bonus. For example, two cities in the same country or state are more likely to be mentioned together.</p>
+<div class="worked"><h4>Worked example: &ldquo;Compare Paris and Austin stores&rdquo;</h4>
+<p>&ldquo;Austin&rdquo; resolves strongly to Austin, Texas; call its score s_A. For Paris, the individual scores are the same as in 4.8.</p>
+<p>Compatibility: &psi;(Paris TX, Austin TX) = +1.5 (same state), and &psi;(Paris FR, Austin TX) = 0.</p>
+<table>
+<tr><th>Joint assignment</th><th>Individual scores</th><th>Compatibility</th><th>Total</th></tr>
+<tr class="lose"><td>(Paris FR, Austin TX)</td><td class="num">4.4 + s_A</td><td class="num">0</td><td class="num">4.4 + s_A</td></tr>
+<tr class="win"><td>(Paris TX, Austin TX)</td><td class="num">3.4 + s_A</td><td class="num">1.5</td><td class="num">4.9 + s_A</td></tr>
+</table>
+<p>The joint decision flips to <b>Paris, Texas</b>. Comparing two Texas cities is more coherent.</p>
+<p><b>How confident is it?</b> Softmax over the two leading assignments (s_A cancels out):</p>
+<div class="formula">P(Paris TX, Austin TX) = 1 / (1 + e^(&minus;0.5)) &asymp; 0.62
+P(Paris FR, Austin TX) &asymp; 0.38</div>
+<p>The result is 0.62 &ge; 0.6 with a margin of 0.24 &ge; 0.2, so it is accepted, but only just. A borderline result like this should be stated as an assumption (&ldquo;interpreting Paris as Paris, Texas&rdquo;).</p></div>
+<div class="callout plain" data-tag="In plain English">
+<p>Two mentions are not independent. If someone says &ldquo;Paris and Austin&rdquo;, they are probably thinking of the same part of the world, so we reward pairs that belong together.</p></div>
+<div class="callout analogy" data-tag="Analogy">
+<p>Solving a crossword: a word that was only your second guess for 3-across can become the right one because it fits the letters of 4-down.</p></div>
+<div class="widget" data-w="joint" data-title="Joint resolution: watch the answer flip with &psi;"></div>
+<h3>Computational cost</h3>
+<p>With j mentions and K candidates each, there are K<sup>j</sup> joint assignments. Ten mentions with 10 candidates each gives 10<sup>10</sup> combinations, far too many to enumerate. Practical approaches:</p>
+<table>
+<tr><th>Method</th><th>Idea</th></tr>
+<tr><td>Beam search</td><td>Keep only the top-B partial assignments at each step</td></tr>
+<tr><td>Loopy belief propagation</td><td>Pass &ldquo;messages&rdquo; between mentions until their beliefs stabilize</td></tr>
+<tr><td>Coordinate ascent</td><td>Fix all mentions but one, improve it, then repeat</td></tr>
+</table>
+</section>
+
+<section data-toc="4.10 Abstaining and calibration">
+<h2><span class="n">4.10</span>Abstaining: the NIL option</h2>
+<p>Sometimes no candidate is right: the entity is new, misspelled beyond recognition, or simply not in the data. Forcing a match is worse than admitting uncertainty.</p>
+<div class="formula">&ecirc;(m) = argmax_e score(m, e)    if  max_e score(m, e) &ge; &tau;_NIL
+       NIL                     otherwise   &rarr;  ask, or report &ldquo;not found&rdquo;</div>
+<p>An equivalent approach adds NIL as an explicit candidate with a fixed score s<sub>NIL</sub>. It wins whenever every real candidate scores below it.</p>
+<div class="callout analogy" data-tag="Analogy">
+<p>A good librarian says &ldquo;we don&rsquo;t have that book&rdquo; rather than handing you a different book with a similar title.</p></div>
+<h3>Calibration: does 70% confidence mean 70% correct?</h3>
+<p>A system is <b>calibrated</b> if, among all answers given with confidence p, a fraction of about p are actually correct. Measure this with the <b>expected calibration error</b>: group predictions into confidence bins B<sub>1</sub>&hellip;B<sub>M</sub>, then</p>
+<div class="formula">ECE = &Sigma;_m ( |B_m| / n ) &middot; | accuracy(B_m) &minus; confidence(B_m) |</div>
+<p>Example: 100 links made at about 90% confidence, of which only 70 were correct. That bin contributes |0.70 &minus; 0.90| = 0.20 of error, weighted by its share of all links. The system is <b>overconfident</b>.</p>
+<div class="callout plain" data-tag="In plain English">
+<p>If a weather forecaster says &ldquo;90% rain&rdquo; on 100 days, it should rain on about 90 of them. If it rains on only 70, the forecaster is overconfident. ECE is the average size of that gap.</p></div>
+<h3>Fixing miscalibration: temperature scaling</h3>
+<p>Divide all scores by a learned temperature T before the softmax:</p>
+<div class="formula">P(e | m) = softmax( score / T )
+T &gt; 1  &rarr;  softer probabilities (fixes overconfidence)
+T &lt; 1  &rarr;  sharper probabilities (fixes underconfidence)</div>
+<p>The ranking doesn&rsquo;t change, only the stated confidence, so the thresholds &tau; and &delta; become trustworthy.</p>
+<div class="widget" data-w="ece" data-title="Calibration: compute ECE, then fix it with temperature"></div>
+</section>
+
+<section data-toc="4.11 The parse score">
+<h2><span class="n">4.11</span>Putting it together: the parse score</h2>
+<p>A full parse of the question combines the intent, template slots, operators, time intervals and entity links:</p>
+<div class="formula">log P(parse | Q) =   log P(k&#770; | Q)                              &larr; intent            (4.2&ndash;4.3)
+                   + &Sigma;_slots log P(slot filled correctly)       &larr; template          (4.4)
+                   + log P(op* | modifiers)                     &larr; aggregation       (4.5)
+                   + log P(interval* | phrase, convention)      &larr; time              (4.6)
+                   + &Sigma;&#7522; log P(&ecirc;&#7522; | m&#7522;)                         &larr; entity links      (4.8)
+                   + &Sigma;_{i&lt;l} &psi;(&ecirc;&#7522;, &ecirc;_l)                  &larr; joint coherence   (4.9)</div>
+<p>The best parse is the argmax of this score. Each component with low confidence becomes a <b>stated assumption</b> or a <b>clarifying question</b>.</p>
+<div class="callout plain" data-tag="In plain English">
+<p>Adding logs is multiplying probabilities: the parse is only as trustworthy as its weakest part. One shaky piece (here, which Paris) is exactly what you flag to the user.</p></div>
+<h3>End-to-end example</h3>
+<p>&ldquo;top 5 Paris stores by revenue last quarter&rdquo; &rarr;</p>
+<table>
+<tr><th>Component</th><th>Resolution</th><th>Confidence</th></tr>
+<tr><td>Intent</td><td>rank</td><td class="num">0.90</td></tr>
+<tr><td>Measure / operator</td><td>Revenue / SUM</td><td>High</td></tr>
+<tr><td>Dimension</td><td>Store</td><td>High</td></tr>
+<tr><td>Order, N</td><td>Descending, 5</td><td>High</td></tr>
+<tr class="lose"><td>Location</td><td>Paris, France</td><td class="num">0.69</td></tr>
+<tr><td>Time</td><td>[2026-07-01, 2026-10-01)</td><td>High (calendar convention assumed)</td></tr>
+</table>
+<div class="cards">
+  <div class="card"><h5>Intent</h5><p>rank &middot; 0.90</p></div>
+  <div class="card"><h5>Slots</h5><p>Revenue / SUM, Store, Descending, 5</p><p class="dim">all high</p></div>
+  <div class="card"><h5>Location</h5><p>Paris, France &middot; 0.69</p><p class="dim">weakest link: state it as an assumption</p></div>
+  <div class="card"><h5>Time</h5><p>[2026-07-01, 2026-10-01)</p><p class="dim">calendar convention assumed</p></div>
+</div>
+</section>
+
+<section data-toc="4.12 Common pitfalls">
+<h2><span class="n">4.12</span>Common pitfalls</h2>
+<table>
+<tr><th>Pitfall</th><th>Symptom</th><th>Fix in the math</th></tr>
+<tr><td>Forcing a single intent</td><td>&ldquo;Why&hellip; compared to&hellip;&rdquo; loses the comparison</td><td>Multi-label sigmoids</td></tr>
+<tr><td>Operator chosen from the column name</td><td>&ldquo;Total&rdquo; answered with an average</td><td>op* from the modifier words in Q</td></tr>
+<tr><td>COUNT rows vs. COUNT DISTINCT</td><td>Counting orders when asked for customers</td><td>The noun after &ldquo;how many&rdquo; picks the entity</td></tr>
+<tr><td>Average of averages</td><td>Wrong overall mean</td><td>&Sigma; numerator / &Sigma; denominator</td></tr>
+<tr><td>Partial-period comparison</td><td>Fake drops in the current period</td><td>Prefer complete periods for trends</td></tr>
+<tr><td>Resolving mentions independently</td><td>Incoherent pairs (Paris, FR + Austin, TX)</td><td>Joint assignment with &psi;</td></tr>
+<tr><td>Forced linking</td><td>Wrong entity instead of &ldquo;not found&rdquo;</td><td>NIL threshold &tau;_NIL</td></tr>
+<tr><td>Overconfident scores</td><td>Thresholds fire wrongly</td><td>Calibrate with temperature scaling</td></tr>
+</table>
+</section>
+
+<section data-toc="Check your understanding">
+<h2>Check your understanding</h2>
+<div class="check"><ol>
+<li><span class="q"><b>Compute:</b> equal priors (0.5) for trend and rank. P(&ldquo;over time&rdquo; | trend) = 0.40, and P(&ldquo;over time&rdquo; | rank) = 0.05. What is P(trend | Q)?</span><span class="a">0.5 &times; 0.40 = 0.20 and 0.5 &times; 0.05 = 0.025. P(trend) = 0.20 / 0.225 &asymp; 0.889. <i>(Use the Quiz 1 button in the naive Bayes tool.)</i></span></li>
+<li><span class="q"><b>Compute:</b> region A has 20 orders averaging $50, and region B has 80 orders averaging $100. What are the naive and correct overall averages?</span><span class="a">Naive: (50 + 100) / 2 = $75. Correct: (20 &times; 50 + 80 &times; 100) / 100 = (1,000 + 8,000) / 100 = $90.</span></li>
+<li><span class="q"><b>Compute:</b> 500 orders came from 120 distinct customers. &ldquo;How many customers bought?&rdquo;</span><span class="a">120, using COUNT DISTINCT customer, not 500.</span></li>
+<li><span class="q"><b>Compute:</b> two candidate entities score 3 and 1 (T = 1). What is the probability of the top one?</span><span class="a">1 / (1 + e<sup>&minus;2</sup>) &asymp; 0.881.</span></li>
+<li><span class="q"><b>Reason:</b> why can resolving mentions jointly change an answer that looked confident in isolation?</span><span class="a">Pairwise compatibility &psi; adds evidence that individual scoring can&rsquo;t see. A candidate that is second-best alone can win when it fits much better with the other entities in the question.</span></li>
+<li><span class="q"><b>Apply:</b> today is 2026-10-21. What interval is &ldquo;last full month&rdquo;?</span><span class="a">[2026-09-01, 2026-10-01), all of September 2026.</span></li>
+</ol></div>
+</section>
+
+<section data-toc="Key takeaways">
+<h2>Key takeaways</h2>
+<ul class="takeaways">
+<li>Intent sets the answer&rsquo;s shape. Use softmax for one intent, sigmoids for several, and cue-word likelihood ratios to show which words matter.</li>
+<li>Each intent maps to a template with slots. Explain-type intents become decompositions of a change.</li>
+<li>The aggregation operator comes from the user&rsquo;s words. Count the right entity, and never average averages.</li>
+<li>Time phrases need an anchor date and a calendar convention. Prefer complete periods for trends.</li>
+<li>Entity linking = candidate generation + scoring (lexical, prior, type, context) + checking against the data.</li>
+<li>Joint resolution with pairwise compatibility catches incoherent combinations, but borderline wins should be stated as assumptions.</li>
+<li>NIL and calibration keep the system honest: &ldquo;not found&rdquo; beats a confident wrong match.</li>
+</ul>
+<div class="next"><h4>Coming next: Module 5, Semantic Matching, Confidence and Ranking</h4><p>Now that the question is parsed, which specific fields answer each slot? We&rsquo;ll cover bipartite matching (the Hungarian algorithm), value validation and fuzzy lookup, combining stage-by-stage confidence, sanity checks and anomaly bounds, two-stage retrieval and re-ranking, learning to rank, diversity (MMR), and evaluating rankings with nDCG.</p></div>
+</section>
+
+</main>
+<script src="modules.js"></script>
+<script src="lib.js"></script>
+<script src="w4.js"></script>
+</body>
+</html>

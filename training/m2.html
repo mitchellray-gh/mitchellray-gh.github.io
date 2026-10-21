@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Module 2 | Training</title>
+<link rel="stylesheet" href="lesson.css">
+<style>
+#lesson .widget table{font-size:.85rem}
+#lesson .widget .out table{margin-bottom:.6rem}
+</style>
+</head>
+<body data-module="2">
+<main id="lesson">
+
+<section data-toc="Learning objectives">
+<h2>Learning objectives</h2>
+<p>By the end of this module, you should be able to:</p>
+<ol>
+<li>Describe synonyms as equivalence classes and explain why transitivity needs guarding.</li>
+<li>Measure surface-level similarity with edit distance.</li>
+<li>Resolve ambiguous terms with a softmax over candidate concepts, and judge how uncertain the result is with entropy.</li>
+<li>Expand abbreviations with a noisy-channel (Bayesian) model.</li>
+<li>Link raw codes to concepts with pointwise mutual information (PMI).</li>
+<li>Measure semantic distance in an ontology graph with path length and information content.</li>
+</ol>
+<p><b>Module 2: Concept Mapping.</b> How synonyms, abbreviations, typos and codes resolve to the same business concept.</p>
+</section>
+
+<section data-toc="2.1 The problem">
+<h2><span class="n">2.1</span>The problem: many words, one meaning</h2>
+<p>In Module 1, we assumed a function C(&middot;) that turns a question into a set of concepts. This module shows how that function can work.</p>
+<p>The same business idea appears in many forms:</p>
+<table>
+<tr><th>Form</th><th>Examples, all meaning Revenue</th></tr>
+<tr><td>Synonym</td><td>sales, turnover, income from sales</td></tr>
+<tr><td>Abbreviation</td><td>rev, REV, Rev.</td></tr>
+<tr><td>Typo</td><td>revnue, reveune</td></tr>
+<tr><td>Code</td><td>R01, ACCT_4000</td></tr>
+<tr><td>Domain jargon</td><td>top line, bookings (sometimes)</td></tr>
+</table>
+<p>The goal is a mapping from every surface form t to a concept c:</p>
+<div class="formula">L : Surface forms &rarr; Concepts
+L("sales") = L("rev") = L("revnue") = L("R01") = Revenue</div>
+<svg class="diagram" viewBox="0 0 640 210" style="width:100%;height:auto" role="img" aria-label="Many surface forms map to one concept">
+  <g font-size="12" text-anchor="middle">
+    <rect x="10" y="10" width="150" height="32" fill="#fff" stroke="#1a1815"/><text x="85" y="31">sales, turnover</text>
+    <rect x="10" y="52" width="150" height="32" fill="#fff" stroke="#1a1815"/><text x="85" y="73">rev, REV, Rev.</text>
+    <rect x="10" y="94" width="150" height="32" fill="#fff" stroke="#1a1815"/><text x="85" y="115">revnue, reveune</text>
+    <rect x="10" y="136" width="150" height="32" fill="#fff" stroke="#1a1815"/><text x="85" y="157">R01, ACCT_4000</text>
+    <rect x="10" y="178" width="150" height="26" fill="#fff" stroke="#1a1815"/><text x="85" y="195">top line</text>
+    <rect x="470" y="70" width="160" height="70" fill="#1a1815"/><text x="550" y="100" fill="#f4f1ea" font-weight="700">Concept: Revenue</text><text x="550" y="120" fill="#cfc8b8">P(c | t, context)</text>
+    <rect x="250" y="82" width="80" height="46" fill="#fde3d9" stroke="#e8481c"/><text x="290" y="110" font-weight="700">L(t)</text>
+  </g>
+  <g stroke="#1a1815" stroke-width="1.5" fill="none"><path d="M160 26 L250 100"/><path d="M160 68 L250 103"/><path d="M160 110 L250 105"/><path d="M160 152 L250 108"/><path d="M160 191 L250 112"/><path d="M330 105 L470 105"/></g>
+</svg>
+<p>The difficulty is that the mapping is often <b>ambiguous</b>. &ldquo;Sales&rdquo; can mean revenue, units sold, or the sales team. So we need L to output a probability distribution over concepts, not a single answer:</p>
+<div class="formula">L(t) &rarr; P(c | t, context)</div>
+<p class="plainline">given this word and the words around it, how likely is each business concept to be the one meant?</p>
+<div class="callout plain" data-tag="In plain English">
+<p>People say the same thing in many ways and different things in the same way. The system keeps a ranked list of &ldquo;what you probably meant&rdquo; instead of blindly picking the first guess.</p>
+</div>
+<div class="callout analogy" data-tag="Analogy">
+<p>It is a mail sorter reading messy handwriting. &ldquo;Rev&rdquo;, &ldquo;revnue&rdquo; and &ldquo;R01&rdquo; are different scrawls, but they all belong in the Revenue pigeonhole. When a scrawl could fit two pigeonholes, the sorter looks at the rest of the envelope for clues.</p>
+</div>
+</section>
+
+<section data-toc="2.2 Equivalence classes">
+<h2><span class="n">2.2</span>Equivalence classes</h2>
+<h3>Definition</h3>
+<p>Define a relation ~ on surface forms: t<sub>1</sub> ~ t<sub>2</sub> if both refer to the same concept. For ~ to be an equivalence relation, it must be:</p>
+<table>
+<tr><th>Property</th><th>Formal</th><th>Meaning</th></tr>
+<tr><td>Reflexive</td><td>t ~ t</td><td>Every term means itself</td></tr>
+<tr><td>Symmetric</td><td>t<sub>1</sub> ~ t<sub>2</sub> &rArr; t<sub>2</sub> ~ t<sub>1</sub></td><td>Synonymy goes both ways</td></tr>
+<tr><td>Transitive</td><td>t<sub>1</sub> ~ t<sub>2</sub> &and; t<sub>2</sub> ~ t<sub>3</sub> &rArr; t<sub>1</sub> ~ t<sub>3</sub></td><td>Synonyms of synonyms are synonyms</td></tr>
+</table>
+<p>An equivalence relation partitions the vocabulary into disjoint classes:</p>
+<div class="formula">[Revenue]  = { revenue, sales, turnover, rev, top line }
+[Customer] = { customer, client, account holder, cust }
+[Region]   = { region, territory, geo, area }</div>
+<p>Every term belongs to exactly one class, and its concept is the class it lives in.</p>
+<div class="cards">
+  <div class="card"><h5>[Revenue]</h5><p><span class="chip">revenue</span><span class="chip">sales</span><span class="chip">turnover</span><span class="chip">rev</span><span class="chip">top line</span></p></div>
+  <div class="card"><h5>[Customer]</h5><p><span class="chip">customer</span><span class="chip">client</span><span class="chip">account holder</span><span class="chip">cust</span></p></div>
+  <div class="card"><h5>[Region]</h5><p><span class="chip">region</span><span class="chip">territory</span><span class="chip">geo</span><span class="chip">area</span></p></div>
+</div>
+<div class="callout plain" data-tag="In plain English">
+<p>An equivalence class is a &ldquo;same-meaning bucket&rdquo;. Every word goes in exactly one bucket, and words in the same bucket can be swapped for each other.</p>
+</div>
+
+<h3>The transitivity trap</h3>
+<p>Real language is not perfectly transitive. Chaining loose synonyms causes <b>semantic drift</b>:</p>
+<div class="formula">sales ~ revenue ~ income ~ earnings ~ salary
+&rArr; sales ~ salary   &#10007;</div>
+<div class="flow">
+  <div class="node"><b>strong</b>sales</div><span class="arrow">&harr;</span>
+  <div class="node"><b>strong</b>revenue</div><span class="arrow">&harr;</span>
+  <div class="node"><b>medium</b>income</div><span class="arrow">&harr;</span>
+  <div class="node"><b>weak</b>earnings</div><span class="arrow">&harr;</span>
+  <div class="node hl"><b>drifted</b>salary</div>
+</div>
+<div class="callout analogy" data-tag="Analogy">
+<p>It is the game of telephone: each person repeats the message almost correctly, yet after five people it is a different sentence.</p>
+</div>
+<p><b>Fix 1: multiply confidences along a chain.</b> Each link carries a confidence, and the confidence of a chain is the product of its links:</p>
+<div class="formula">conf(t&#8321; ~ t&#8342;) = &Pi;<sub>i=1</sub><sup>k&minus;1</sup> conf(t&#7522; ~ t&#7522;&#8330;&#8321;)</div>
+<p>For example, 0.9 &times; 0.8 &times; 0.6 &times; 0.5 = 0.216, which is too weak to trust.</p>
+<div class="widget" data-w="chain" data-title="Chain confidence: how fast does trust decay?"></div>
+<p><b>Fix 2: only allow strict synonym edges to merge classes.</b> Weaker relations such as <i>related-to</i> never merge classes. Instead they become distances (see 2.7).</p>
+</section>
+
+<section data-toc="2.3 Edit distance">
+<h2><span class="n">2.3</span>Surface similarity: edit distance</h2>
+<p>Typos and spelling variants are caught by measuring how many character edits separate two strings.</p>
+<h3>Levenshtein distance</h3>
+<p>The minimum number of insertions, deletions or substitutions needed to turn string a into string b. It&rsquo;s computed with dynamic programming:</p>
+<div class="formula">lev(i, j) = min {  lev(i&minus;1, j) + 1,                   (delete)
+                   lev(i, j&minus;1) + 1,                   (insert)
+                   lev(i&minus;1, j&minus;1) + 1[a&#7522; &ne; b&#11388;] }   (substitute)</div>
+<p class="plainline">fill a grid where each cell is the cheapest way to turn the first i letters of a into the first j letters of b: step down, step right, or step diagonally (free if the letters match).</p>
+<h3>Normalized similarity</h3>
+<div class="formula">sim_lex(a, b) = 1 &minus; lev(a, b) / max(|a|, |b|)</div>
+<div class="worked"><h4>Example: &ldquo;revnue&rdquo; vs. &ldquo;revenue&rdquo;</h4>
+<div class="formula">One insertion (the missing "e"), so lev = 1
+max length = 7
+sim_lex = 1 &minus; 1/7 &asymp; 0.857</div></div>
+<p><b>Normalization first.</b> Before comparing, apply cheap transforms such as lower-casing, trimming punctuation and reducing words to their stems (&ldquo;revenues&rdquo; &rarr; &ldquo;revenue&rdquo;). Many matches are exact after normalization.</p>
+<div class="widget" data-w="lev" data-title="Levenshtein matrix: type any two words"></div>
+<div class="callout analogy" data-tag="Analogy">
+<p>Edit distance is the number of keystrokes (insert, delete, replace) a spell-checker needs to fix a word. Few keystrokes means probably the same word typed badly.</p>
+</div>
+<div class="callout warn" data-tag="Limitation">
+<p>Edit distance knows nothing about meaning. &ldquo;cost&rdquo; and &ldquo;coast&rdquo; are 1 edit apart. &ldquo;revenue&rdquo; and &ldquo;turnover&rdquo; are 7 edits apart (almost every letter of &ldquo;turnover&rdquo; must be changed, and one extra letter added). This is why lexical similarity is only one input among several.</p>
+</div>
+<div class="callout note" data-tag="Where s(t, c) and ctx come from">
+<p>Used in the next section: s(t, c) is how closely t matches c&rsquo;s known aliases, for example the maximum embedding cosine over the class [c]. ctx(c, Q) is how well c fits the other concepts in the question. &lambda; is how much context matters. T is the temperature: a low T makes the distribution sharper and more decisive; a high T makes it flatter and more cautious.</p>
+</div>
+</section>
+
+<section data-toc="2.4 Softmax and entropy">
+<h2><span class="n">2.4</span>Resolving ambiguity: softmax over concepts</h2>
+<p>When a term could mean several concepts, we score each candidate and turn the scores into probabilities.</p>
+<h3>The model</h3>
+<div class="formula">P(c | t, Q) = exp( z(c) / T ) / &Sigma;<sub>c'</sub> exp( z(c') / T )
+z(c) = s(t, c) + &lambda; &middot; ctx(c, Q)</div>
+<p class="plainline">score every candidate, exponentiate so that all scores are positive and bigger gaps count for more, then divide by the total so the answers add up to 1.</p>
+<h3>Context coherence</h3>
+<p>A concept fits better when it commonly appears with the other concepts already in the question:</p>
+<div class="formula">ctx(c, Q) = &Sigma;<sub>c&#11388; &isin; C(Q) \ {c}</sub> w(c, c&#11388;)</div>
+<p>Here w(c, c<sub>j</sub>) is how often c and c<sub>j</sub> appear together in practice. For example, &ldquo;Revenue&rdquo; with &ldquo;Region&rdquo; is common, while &ldquo;Sales Team&rdquo; with &ldquo;Quarter total&rdquo; is less common.</p>
+
+<div class="worked"><h4>Worked example</h4>
+<p>Question: &ldquo;Show sales by region last quarter.&rdquo; The term is &ldquo;sales&rdquo;. Use &lambda; = 1 and T = 1.</p>
+<table>
+<tr><th>Candidate concept</th><th>s(t, c)</th><th>ctx(c, Q)</th><th>z(c)</th></tr>
+<tr class="win"><td>Revenue</td><td class="num">0.9</td><td class="num">0.6</td><td class="num">1.5</td></tr>
+<tr><td>UnitsSold</td><td class="num">0.7</td><td class="num">0.5</td><td class="num">1.2</td></tr>
+<tr><td>SalesDepartment</td><td class="num">0.8</td><td class="num">0.1</td><td class="num">0.9</td></tr>
+</table>
+<p>Softmax:</p>
+<div class="formula">e^1.5 = 4.482    e^1.2 = 3.320    e^0.9 = 2.460    &Sigma; = 10.261
+P(Revenue)         = 4.482 / 10.261 &asymp; 0.44
+P(UnitsSold)       = 3.320 / 10.261 &asymp; 0.32
+P(SalesDepartment) = 2.460 / 10.261 &asymp; 0.24</div>
+<p>Revenue wins, but not by much. How uncertain is this?</p></div>
+
+<h3>Measuring uncertainty: entropy</h3>
+<div class="formula">H(P) = &minus; &Sigma;<sub>c</sub> P(c) &middot; ln P(c)        maximum = ln(number of candidates)</div>
+<div class="formula">H = &minus;[0.44&middot;ln 0.44 + 0.32&middot;ln 0.32 + 0.24&middot;ln 0.24]
+  &asymp; 0.362 + 0.365 + 0.342 = 1.07 nats
+H_max = ln 3 &asymp; 1.10   &rArr;   normalized entropy &asymp; 0.97   (very uncertain)</div>
+<div class="callout plain" data-tag="In plain English">
+<p>Entropy is a &ldquo;confusion meter&rdquo;. It is 0 when one answer has all the probability, and at its highest when every answer is equally likely. A normalized entropy of 0.97 means the system is almost guessing.</p>
+</div>
+<div class="callout analogy" data-tag="Analogy">
+<p>Temperature is how bold a judge is. At a low T the judge announces the top scorer loudly even if the lead is tiny; at a high T the judge shrugs and says &ldquo;they all look about the same&rdquo;.</p>
+</div>
+
+<h3>What new context does</h3>
+<p>Suppose the user adds &ldquo;&hellip;in dollars.&rdquo; The unit &ldquo;dollars&rdquo; strongly fits Revenue, so ctx(Revenue) rises to 1.5 and z(Revenue) becomes 2.4.</p>
+<div class="formula">e^2.4 = 11.023    &Sigma; = 11.023 + 3.320 + 2.460 = 16.803
+P(Revenue) &asymp; 0.66    P(UnitsSold) &asymp; 0.20    P(SalesDepartment) &asymp; 0.15</div>
+<div class="callout key" data-tag="Key insight">
+<p>A single word was ambiguous, but the surrounding words resolved it. Context is a form of evidence.</p>
+</div>
+
+<h3>Decision rule</h3>
+<p>Accept the top concept only if it is both confident and clearly ahead of the runner-up:</p>
+<div class="formula">accept c&#8321;   if   P(c&#8321;) &ge; &tau;   and   P(c&#8321;) &minus; P(c&#8322;) &ge; &delta;
+otherwise   &rarr;  ask a clarifying question, or state the assumption made</div>
+<p>With &tau; = 0.6 and &delta; = 0.2, the first case (0.44, margin 0.12) leads to clarification. The second case (0.66, margin 0.46) is accepted.</p>
+<div class="widget" data-w="softmax" data-title="Softmax, entropy and the accept / clarify rule"></div>
+<div class="diagram" role="img" aria-label="Decision rule">
+<div class="flow">
+  <div class="node"><b>1</b>Scores z(c)</div><span class="arrow">&rarr;</span>
+  <div class="node"><b>2</b>Softmax with T &rarr; P(c)</div><span class="arrow">&rarr;</span>
+  <div class="node"><b>3</b>P(c&#8321;) &ge; &tau; and margin &ge; &delta;?</div><span class="arrow">&rarr;</span>
+  <div class="node hl"><b>yes</b>Accept c&#8321;</div>
+  <div class="node"><b>no</b>Clarify, or state the assumption</div>
+</div>
+</div>
+</section>
+
+<section data-toc="2.5 Abbreviations">
+<h2><span class="n">2.5</span>Abbreviations: the noisy-channel model</h2>
+<p>Think of an abbreviation as a corrupted message. Someone had a full form f in mind and sent a compressed version a. We want to recover f.</p>
+<h3>Bayes&rsquo; rule</h3>
+<div class="formula">P(f | a)  &prop;  P(a | f)  &middot;  P(f)
+                  &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;    &#9472;&#9472;&#9472;&#9472;
+                  "could f      "how common
+                   shorten       is f here?"
+                   to a?"</div>
+<div class="callout analogy" data-tag="Analogy">
+<p>You get a text message that just says &ldquo;NA&rdquo;. You ask two questions: &ldquo;could a sender abbreviate any of my candidate phrases this way?&rdquo; (likelihood) and &ldquo;which of those phrases is this person likely to be talking about right now?&rdquo; (prior). The second question usually decides it.</p>
+</div>
+<h3>Likelihood P(a | f): how plausible the shortening is</h3>
+<p>This is high when a matches f&rsquo;s structure:</p>
+<table>
+<tr><th>Pattern</th><th>Example</th><th>Plausibility</th></tr>
+<tr><td>Initials</td><td>NA &larr; North America</td><td>High</td></tr>
+<tr><td>Prefix</td><td>Rev &larr; Revenue</td><td>High</td></tr>
+<tr><td>Consonant skeleton</td><td>Mgmt &larr; Management</td><td>Medium</td></tr>
+<tr><td>Subsequence</td><td>Qty &larr; Quantity</td><td>Medium</td></tr>
+<tr><td>No structural match</td><td>XYZ &larr; Revenue</td><td>&asymp; 0</td></tr>
+</table>
+<h3>Prior P(f): how common the full form is</h3>
+<p>The prior should depend on <b>context</b>, not just global frequency. That is where most of the disambiguation happens.</p>
+
+<div class="worked"><h4>Worked example: &ldquo;NA&rdquo;</h4>
+<p>Candidates: North America, Not Applicable, Net Amount.</p>
+<p><b>Case A: no context.</b> &ldquo;What is NA?&rdquo;</p>
+<table>
+<tr><th>f</th><th>P(a | f)</th><th>P(f)</th><th>Product</th><th>Posterior</th></tr>
+<tr><td>North America</td><td class="num">0.9</td><td class="num">0.3</td><td class="num">0.27</td><td class="num">0.27/0.81 &asymp; 0.33</td></tr>
+<tr class="win"><td>Not Applicable</td><td class="num">0.8</td><td class="num">0.5</td><td class="num">0.40</td><td class="num">0.40/0.81 &asymp; 0.49</td></tr>
+<tr><td>Net Amount</td><td class="num">0.7</td><td class="num">0.2</td><td class="num">0.14</td><td class="num">0.14/0.81 &asymp; 0.17</td></tr>
+</table>
+<p>The result is ambiguous: &ldquo;Not Applicable&rdquo; leads narrowly.</p>
+<p><b>Case B: context is a region column.</b> &ldquo;Revenue for NA vs EMEA.&rdquo; The neighbouring term &ldquo;EMEA&rdquo; is a region, so the prior shifts strongly.</p>
+<table>
+<tr><th>f</th><th>P(a | f)</th><th>P(f | region context)</th><th>Product</th><th>Posterior</th></tr>
+<tr class="win"><td>North America</td><td class="num">0.9</td><td class="num">0.85</td><td class="num">0.765</td><td class="num">0.765/0.88 &asymp; 0.87</td></tr>
+<tr><td>Not Applicable</td><td class="num">0.8</td><td class="num">0.10</td><td class="num">0.080</td><td class="num">0.080/0.88 &asymp; 0.09</td></tr>
+<tr><td>Net Amount</td><td class="num">0.7</td><td class="num">0.05</td><td class="num">0.035</td><td class="num">0.035/0.88 &asymp; 0.04</td></tr>
+</table>
+<p>The result is now clear: North America.</p></div>
+<div class="callout key" data-tag="Lesson">
+<p>The likelihood barely changed. The context-dependent prior did all the work. Never resolve an abbreviation in isolation.</p>
+</div>
+<div class="widget" data-w="noisy" data-title="Resolve &ldquo;NA&rdquo;: turn the region context on and off"></div>
+<div class="callout warn" data-tag="Data-quality note">
+<p>&ldquo;NA&rdquo;, &ldquo;N/A&rdquo;, &ldquo;Unknown&rdquo; and empty strings often appear as placeholder values in data. A good mapping keeps them in a separate &ldquo;missing or unknown&rdquo; class rather than treating them as a real category.</p>
+</div>
+</section>
+
+<section data-toc="2.6 Codes and PMI">
+<h2><span class="n">2.6</span>Codes in the data: pointwise mutual information</h2>
+<p>Internal codes such as &ldquo;R01&rdquo;, &ldquo;ACCT_4000&rdquo; or &ldquo;ST-07&rdquo; often have no linguistic structure at all. We can only learn what they mean from <b>where they appear</b>.</p>
+<h3>PMI</h3>
+<p>Measures whether a code v and a concept c appear together more than chance would predict:</p>
+<div class="formula">PMI(v, c) = log&#8322; [ P(v, c) / ( P(v) &middot; P(c) ) ]</div>
+<p class="plainline">compare how often the two really show up together with how often they would meet by pure coincidence. More than coincidence means a link.</p>
+<table>
+<tr><th>PMI value</th><th>Interpretation</th></tr>
+<tr><td>&gt; 0</td><td>Appear together more than expected: likely related</td></tr>
+<tr><td>&asymp; 0</td><td>Independent</td></tr>
+<tr><td>&lt; 0</td><td>Appear together less than expected: likely unrelated</td></tr>
+</table>
+<div class="callout analogy" data-tag="Analogy">
+<p>If two strangers are both tall and both like jazz, that tells you little. If two people show up at the same tiny jazz club far more often than chance allows, they probably know each other. PMI measures the &ldquo;more than chance&rdquo; part.</p>
+</div>
+
+<div class="worked"><h4>Worked example</h4>
+<p>Suppose we examine 1,000 documented field contexts, such as column descriptions, report labels and filters:</p>
+<ul>
+<li>Code &ldquo;R01&rdquo; appears in 50 of them, so P(v) = 0.05.</li>
+<li>Concept Region appears in 200, so P(Region) = 0.20.</li>
+<li>They appear together in 40, so P(v, Region) = 0.04.</li>
+<li>Concept Revenue appears in 300, so P(Revenue) = 0.30.</li>
+<li>&ldquo;R01&rdquo; and Revenue appear together in 5, so P(v, Revenue) = 0.005.</li>
+</ul>
+<div class="formula">PMI(R01, Region)  = log&#8322;( 0.04  / (0.05 &times; 0.20) ) = log&#8322;( 0.04 / 0.010 )  = log&#8322; 4     = +2.0 bits
+PMI(R01, Revenue) = log&#8322;( 0.005 / (0.05 &times; 0.30) ) = log&#8322;( 0.005 / 0.015 ) = log&#8322; 0.333 &asymp; &minus;1.6 bits</div>
+<p><b>Conclusion:</b> &ldquo;R01&rdquo; is a region code, not a revenue code, even though both start with &ldquo;R&rdquo;.</p></div>
+<div class="widget" data-w="pmi" data-title="PMI calculator for the code R01 (edit the counts)"></div>
+<p><b>Positive PMI (PPMI).</b> In practice, negative values are noisy when counts are small, so they are often clipped: PPMI = max(0, PMI).</p>
+<div class="callout warn" data-tag="Rare-event caution">
+<p>PMI exaggerates relationships for very rare codes. Common remedies are to require a minimum count, or to add a smoothing constant k to every count (P &rarr; (count + k) / (N + k&middot;|V|)).</p>
+</div>
+</section>
+
+<section data-toc="2.7 Ontology distance">
+<h2><span class="n">2.7</span>Semantic distance in an ontology</h2>
+<p>Some concepts aren&rsquo;t synonyms but are still close. &ldquo;Gross revenue&rdquo; and &ldquo;net revenue&rdquo; are siblings. &ldquo;Revenue&rdquo; and &ldquo;cost&rdquo; are both financial metrics, but they are opposites in practice. An ontology graph captures this structure.</p>
+<h3>The ontology as a graph</h3>
+<svg class="diagram" viewBox="0 0 420 230" style="width:100%;max-width:520px;height:auto;margin:0 auto 1.2rem" role="img" aria-label="Ontology tree: Metric, Financial Metric, Revenue and Cost, Gross Rev and Net Rev">
+  <g stroke="#1a1815" stroke-width="1.5"><line x1="210" y1="40" x2="210" y2="85"/><line x1="210" y1="115" x2="130" y2="150"/><line x1="210" y1="115" x2="300" y2="150"/><line x1="130" y1="180" x2="80" y2="205"/><line x1="130" y1="180" x2="190" y2="205"/></g>
+  <g font-size="12" text-anchor="middle">
+    <rect x="165" y="15" width="90" height="26" fill="#fff" stroke="#1a1815"/><text x="210" y="32">Metric</text>
+    <text x="226" y="68" font-size="10" fill="#6f685b" text-anchor="start">is-a</text>
+    <rect x="150" y="87" width="120" height="26" fill="#fff" stroke="#1a1815"/><text x="210" y="104">Financial Metric</text>
+    <rect x="90" y="152" width="80" height="26" fill="#fff" stroke="#e8481c"/><text x="130" y="169">Revenue</text>
+    <rect x="260" y="152" width="80" height="26" fill="#fff" stroke="#1f6f8b"/><text x="300" y="169">Cost</text>
+    <rect x="35" y="205" width="90" height="22" fill="#fff" stroke="#1a1815"/><text x="80" y="220">Gross Rev</text>
+    <rect x="150" y="205" width="90" height="22" fill="#fff" stroke="#1a1815"/><text x="195" y="220">Net Rev</text>
+  </g>
+</svg>
+<p>Edges are typed, and each type has a traversal cost:</p>
+<table>
+<tr><th>Edge type</th><th>Cost</th></tr>
+<tr><td>synonym-of</td><td class="num">0 (same concept)</td></tr>
+<tr><td>is-a / parent-of</td><td class="num">1</td></tr>
+<tr><td>part-of</td><td class="num">1.5</td></tr>
+<tr><td>related-to</td><td class="num">2</td></tr>
+</table>
+<h3>Method 1: Path-based similarity</h3>
+<div class="formula">dist(c&#8321;, c&#8322;) = weighted shortest-path length (e.g. Dijkstra's algorithm)
+sim_path(c&#8321;, c&#8322;) = exp( &minus;&mu; &middot; dist(c&#8321;, c&#8322;) )</div>
+<p>With &mu; = 0.5:</p>
+<table>
+<tr><th>Pair</th><th>Path</th><th>dist</th><th>sim_path</th></tr>
+<tr><td>Gross Rev &harr; Net Rev</td><td>Gross &rarr; Revenue &rarr; Net</td><td class="num">2</td><td class="num">e<sup>&minus;1.0</sup> &asymp; 0.37</td></tr>
+<tr><td>Gross Rev &harr; Cost</td><td>Gross &rarr; Revenue &rarr; Financial &rarr; Cost</td><td class="num">3</td><td class="num">e<sup>&minus;1.5</sup> &asymp; 0.22</td></tr>
+</table>
+<h3>Method 2: Information-content similarity (Lin)</h3>
+<p>The path method treats every edge equally. But two concepts that share a <i>specific</i> ancestor (such as Revenue) are more alike than two that share only a <i>generic</i> ancestor (such as Financial Metric).</p>
+<p><b>Information content:</b> IC(c) = &minus;ln P(c), where P(c) is the probability that a random mention falls under c or any concept below it. Specific concepts are rare, so they have high IC.</p>
+<div class="formula">sim_Lin(c&#8321;, c&#8322;) = 2 &middot; IC( lcs(c&#8321;, c&#8322;) ) / ( IC(c&#8321;) + IC(c&#8322;) )</div>
+<p>Here lcs is the <b>lowest common subsumer</b>: the most specific ancestor the two concepts share.</p>
+<p>Assume the following probabilities:</p>
+<table>
+<tr><th>Concept</th><th>P(c)</th><th>IC = &minus;ln P</th></tr>
+<tr><td>Financial Metric</td><td class="num">0.50</td><td class="num">0.693</td></tr>
+<tr><td>Revenue</td><td class="num">0.20</td><td class="num">1.609</td></tr>
+<tr><td>Cost</td><td class="num">0.25</td><td class="num">1.386</td></tr>
+<tr><td>Gross Rev</td><td class="num">0.05</td><td class="num">2.996</td></tr>
+<tr><td>Net Rev</td><td class="num">0.08</td><td class="num">2.526</td></tr>
+</table>
+<div class="formula">sim_Lin(Gross, Net)  = 2(1.609) / (2.996 + 2.526) = 3.219 / 5.521 &asymp; 0.58    (lcs = Revenue)
+sim_Lin(Gross, Cost) = 2(0.693) / (2.996 + 1.386) = 1.386 / 4.382 &asymp; 0.32    (lcs = Financial Metric)</div>
+<p>Both methods agree on the order, but Lin separates the two pairs more sharply.</p>
+<div class="widget" data-w="onto" data-title="Pick two concepts: path distance vs. Lin similarity"></div>
+<div class="callout plain" data-tag="In plain English">
+<p>Path similarity counts steps on the map. Lin similarity asks how <i>specific</i> the shared ancestor is: sharing &ldquo;Revenue&rdquo; says a lot, while sharing only &ldquo;Financial Metric&rdquo; says little.</p>
+</div>
+
+<h3>Why not just use embeddings?</h3>
+<p>Embedding models learn from which words appear in similar contexts. &ldquo;Revenue&rdquo; and &ldquo;cost&rdquo; appear in very similar sentences (&ldquo;Q3 ___ rose 5%&rdquo;), so their embeddings are often very close. An ontology encodes that they are distinct, even opposite concepts.</p>
+<div class="formula">cos(&phi;("revenue"), &phi;("cost")) &asymp; high      &larr; embeddings: "these are alike"
+sim_Lin(Revenue, Cost)       &asymp; low       &larr; ontology:   "these differ"</div>
+<div class="callout key" data-tag="Lesson">
+<p>Embeddings measure <b>relatedness</b>, while ontologies measure <b>sameness</b>. Concept mapping needs both.</p>
+</div>
+<div class="callout analogy" data-tag="Analogy">
+<p>Hot and cold are used in nearly the same sentences (&ldquo;the water is ___&rdquo;), so a reader of context alone thinks they are alike. A thermometer scale shows they sit at opposite ends. Embeddings are the reader; the ontology is the scale.</p>
+</div>
+</section>
+
+<section data-toc="2.8 Unified score">
+<h2><span class="n">2.8</span>Putting it together: a unified mapping score</h2>
+<p>Every signal from this module feeds a single score per (term, concept) pair:</p>
+<div class="formula">z(t, c) = w&#8321; &middot; cos( &phi;(t), &phi;(c) )                    &larr; semantic relatedness (embeddings)
+        + w&#8322; &middot; max<sub>t' &isin; [c]</sub> sim_lex(t, t')         &larr; spelling / typo match (2.3)
+        + w&#8323; &middot; log P(t | c)                          &larr; abbreviation fit (2.5)
+        + w&#8324; &middot; PPMI_norm(t, c)                       &larr; co-occurrence for codes (2.6)
+        + w&#8325; &middot; &Sigma;<sub>c&#11388; &isin; C(Q)</sub> sim_onto(c, c&#11388;)         &larr; ontology coherence with the question (2.7)
+        + w&#8326; &middot; log P(c)                              &larr; prior: how common or curated c is</div>
+<p>Then:</p>
+<div class="formula">P(c | t, Q) = softmax_c( z(t, c) / T )                                     (2.4)
+&#265;(t) = argmax_c P(c | t, Q)   if  P(&#265;) &ge; &tau;  and  P(&#265;) &minus; P(c&#8322;) &ge; &delta;
+       else  &rarr;  clarify or state the assumption</div>
+<div class="callout plain" data-tag="In plain English">
+<p>Each signal is a witness. Embeddings say &ldquo;sounds similar&rdquo;, edit distance says &ldquo;spelled similarly&rdquo;, the abbreviation model says &ldquo;could be a shortening&rdquo;, PMI says &ldquo;shows up with this concept&rdquo;, the ontology says &ldquo;fits the question&rdquo;, and the prior says &ldquo;common anyway&rdquo;. The weights decide whom to trust for each kind of term.</p>
+</div>
+<h3>Which signal helps most for each surface form?</h3>
+<table>
+<tr><th>Surface form</th><th>Dominant signals</th></tr>
+<tr><td>Synonym (&ldquo;turnover&rdquo;)</td><td>w&#8321; embeddings, w&#8325; ontology</td></tr>
+<tr><td>Typo (&ldquo;revnue&rdquo;)</td><td>w&#8322; edit distance</td></tr>
+<tr><td>Abbreviation (&ldquo;NA&rdquo;)</td><td>w&#8323; noisy channel plus context prior</td></tr>
+<tr><td>Internal code (&ldquo;R01&rdquo;)</td><td>w&#8324; PMI</td></tr>
+<tr><td>Ambiguous word (&ldquo;sales&rdquo;)</td><td>w&#8325; context coherence plus clarification threshold</td></tr>
+</table>
+<div class="widget" data-w="unified" data-title="Unified score: which signal matters for which kind of term?"></div>
+</section>
+
+<section data-toc="2.9 Common pitfalls">
+<h2><span class="n">2.9</span>Common pitfalls</h2>
+<table class="pitfalls">
+<tr><th>Pitfall</th><th>Symptom</th><th>Fix in the math</th></tr>
+<tr><td>Unbounded transitivity</td><td>&ldquo;sales&rdquo; ends up equal to &ldquo;salary&rdquo;</td><td>Multiply chain confidences; only strict synonyms merge classes</td></tr>
+<tr><td>Relying only on embeddings</td><td>&ldquo;Revenue&rdquo; confused with &ldquo;cost&rdquo;</td><td>Add ontology similarity (w&#8325;)</td></tr>
+<tr><td>Abbreviations without context</td><td>&ldquo;NA&rdquo; read as Not Applicable in a region column</td><td>Make the prior context-dependent: P(f | context)</td></tr>
+<tr><td>Raw PMI on rare codes</td><td>Spurious strong links</td><td>Minimum counts, smoothing, PPMI</td></tr>
+<tr><td>Forcing a single answer</td><td>Silent wrong guesses on ambiguous terms</td><td>Entropy check plus &tau; / &delta; decision rule</td></tr>
+<tr><td>Treating placeholders as values</td><td>&ldquo;N/A&rdquo; counted as a real category</td><td>Keep a separate &ldquo;missing or unknown&rdquo; class</td></tr>
+</table>
+</section>
+
+<section data-toc="Check your understanding">
+<h2>Check your understanding</h2>
+<div class="check"><ol>
+<li><span class="q"><b>Compute:</b> what is the normalized Levenshtein similarity between &ldquo;custmer&rdquo; and &ldquo;customer&rdquo;?</span><span class="a">One insertion, so lev = 1, and the max length is 8. The similarity is 1 &minus; 1/8 = 0.875.</span></li>
+<li><span class="q"><b>Compute:</b> three candidate concepts have scores z = (2, 1, 0) with T = 1. What are their softmax probabilities?</span><span class="a">e&sup2; = 7.389, e&sup1; = 2.718, e&#8304; = 1. The sum is 11.107. The probabilities are &asymp; (0.665, 0.245, 0.090).</span></li>
+<li><span class="q"><b>Compute:</b> a code appears in 10% of contexts, a concept in 10%, and both together in 2%. What is the PMI in bits?</span><span class="a">log&#8322;(0.02 / (0.1 &times; 0.1)) = log&#8322;(2) = +1 bit. They co-occur twice as often as chance.</span></li>
+<li><span class="q"><b>Reason:</b> in the &ldquo;sales&rdquo; example, what happens to the probabilities if the temperature T is raised from 1 to 10?</span><span class="a">The scores are divided by 10, giving 0.15, 0.12 and 0.09, so the distribution becomes nearly uniform (&asymp; 0.34, 0.33, 0.32). The system becomes much less decisive and would almost certainly ask for clarification. <i>(Try it in the softmax widget.)</i></span></li>
+<li><span class="q"><b>Reason:</b> why might two concepts with high embedding similarity still have low Lin similarity?</span><span class="a">Embeddings capture contextual relatedness: the words appear in similar sentences. Lin captures taxonomic sameness: the concepts share a specific ancestor. Opposites such as revenue and cost are contextually related but taxonomically distinct.</span></li>
+</ol></div>
+</section>
+
+<section data-toc="Key takeaways">
+<h2>Key takeaways</h2>
+<ul class="takeaways">
+<li>Synonyms form equivalence classes, but transitivity must be confidence-weighted to prevent drift.</li>
+<li>Edit distance catches typos, noisy-channel Bayes expands abbreviations, and PMI decodes opaque codes.</li>
+<li>Softmax plus entropy turns ambiguous terms into calibrated probabilities, and the &tau; / &delta; thresholds decide when to ask instead of guess.</li>
+<li>Context-dependent priors do most of the disambiguation work.</li>
+<li>Embeddings measure relatedness, while ontologies measure sameness. Robust mapping combines both.</li>
+</ul>
+<div class="next"><h4>Coming next: Module 3, Inferring Implicit Relationships</h4><p>The user asked about &ldquo;customers&rdquo; and &ldquo;revenue&rdquo;, but those live in different tables with no stated link. How does a system figure out how to connect them? We&rsquo;ll cover schema graphs, minimum-cost join paths, Steiner trees, value-overlap evidence (Jaccard, containment, cardinality), latent default filters, and transitive inference.</p></div>
+</section>
+
+</main>
+<script src="modules.js"></script>
+<script src="lib.js"></script>
+<script src="w2.js"></script>
+</body>
+</html>

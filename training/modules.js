@@ -1,7 +1,7 @@
 // To add a module: drop the PDF in training/modules/ and append an entry here. Nothing else to edit.
 window.TRAINING = {
   title: "How a System Answers a Business Question",
-  intro: "A six-module series on how a data system turns a plain-English business question into a trustworthy answer: finding the right sources, mapping language to concepts, inferring joins, detecting intent, matching fields, and choosing what to say.",
+  intro: "A six-module series on how a data system turns a plain-English business question into a trustworthy answer: finding the right sources, mapping language to concepts, inferring joins, detecting intent, matching fields, and choosing what to say. Each module is an interactive lesson with diagrams, live calculators and self-checks; the original PDFs stay available for download.",
   modules: [
     {
       id: 1, file: "modules/module-1.pdf", pages: 6,

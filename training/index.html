@@ -51,7 +51,7 @@ footer{text-align:center;padding:2rem;font-size:.8rem;color:var(--dim);border-to
   <div class="label"><b>&sect;</b> Training</div>
   <h1 id="title"></h1>
   <p class="intro" id="intro"></p>
-  <div class="progress"><span id="ptext"></span><div class="bar"><i id="pbar"></i></div></div>
+  <div class="progress"><span id="ptext"></span><div class="bar"><i id="pbar"></i></div><a class="btn primary" id="cta" href="m1.html">Start Module 1</a></div>
   <div class="grid" id="grid"></div>
 </main>
 <footer>&copy; Mitchell Ray &middot; Training material</footer>
@@ -64,6 +64,11 @@ document.getElementById("title").textContent = T.title;
 document.getElementById("intro").textContent = T.intro;
 document.title = T.title + " | Training";
 
+function cta() {
+  const nx = T.modules.find(m => !done.has(m.id)), a = document.getElementById("cta");
+  a.href = nx ? `m${nx.id}.html` : "m1.html";
+  a.textContent = !nx ? "Review from Module 1" : done.size ? `Continue: Module ${nx.id}` : "Start Module 1";
+}
 function render() {
   document.getElementById("grid").innerHTML = T.modules.map(m => `
     <article class="card ${done.has(m.id) ? "done" : ""}" data-id="${m.id}">
@@ -72,35 +77,30 @@ function render() {
       <p class="sub">${esc(m.subtitle)}</p>
       <p class="meta">${m.objectives.length} learning objectives${m.pages ? " &middot; " + m.pages + " pages" : ""}</p>
       <div class="actions">
-        <button class="btn primary" data-act="read">Read</button>
+        <a class="btn primary" href="m${m.id}.html">${done.has(m.id) ? "Review lesson" : "Start lesson"}</a>
         <button class="btn" data-act="obj">Objectives</button>
-        <a class="btn" href="${m.file}" download>Download PDF</a>
+        <a class="btn" href="${m.file}" download>Original PDF</a>
         <label class="chk"><input type="checkbox" data-act="done" ${done.has(m.id) ? "checked" : ""}> Completed</label>
       </div>
       <div class="obj"><h3>By the end of this module you can</h3><ul>${m.objectives.map(o => `<li>${esc(o)}</li>`).join("")}</ul></div>
-      <div class="viewer"></div>
     </article>`).join("");
   const n = done.size, t = T.modules.length;
   document.getElementById("ptext").textContent = `${n} of ${t} complete`;
   document.getElementById("pbar").style.width = (100 * n / t) + "%";
+  cta();
 }
 
 document.getElementById("grid").addEventListener("click", e => {
   const el = e.target.closest("[data-act]"); if (!el) return;
   const card = el.closest(".card"), id = +card.dataset.id, m = T.modules.find(x => x.id === id);
   if (el.dataset.act === "obj") card.querySelector(".obj").classList.toggle("open");
-  if (el.dataset.act === "read") {
-    const v = card.querySelector(".viewer");
-    if (!v.firstChild) v.innerHTML = `<iframe src="${m.file}#view=FitH" title="${esc(m.title)}"></iframe>`;
-    const open = v.classList.toggle("open");
-    el.textContent = open ? "Close" : "Read";
-  }
   if (el.dataset.act === "done") {
     el.checked ? done.add(id) : done.delete(id);
     localStorage.setItem(KEY, JSON.stringify([...done]));
     card.classList.toggle("done", el.checked);
     document.getElementById("ptext").textContent = `${done.size} of ${T.modules.length} complete`;
     document.getElementById("pbar").style.width = (100 * done.size / T.modules.length) + "%";
+    cta();
   }
 });
 render();

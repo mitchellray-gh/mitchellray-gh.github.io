@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Module 6 | Training</title>
+<link rel="stylesheet" href="lesson.css">
+<style>
+#lesson .mini-flow{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:.75rem;margin:1rem 0 1.2rem}.mini-flow .card{border-top:4px solid var(--accent)}
+#lesson .step-control{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin:.8rem 0}.step-control button{font:600 .75rem var(--font);padding:.45rem .9rem;border:1.5px solid var(--rule);background:var(--surface);cursor:pointer}.step-control output{font-weight:700;color:var(--accent)}
+#lesson .pipeline-detail{background:var(--surface2);border-left:4px solid var(--cyan);padding:.8rem 1rem;margin:.6rem 0;min-height:5rem}
+#lesson .check li .q{display:block}
+@media(max-width:560px){#lesson .mini-flow{grid-template-columns:1fr}}
+</style>
+</head>
+<body data-module="6">
+<main id="lesson">
+<section data-toc="6.1 The decision">
+<h2><span class="n">6.1</span>The problem: many candidates, one answer</h2>
+<p>Module 5 produced a ranked list of candidate plans <span class="formula-inline">π₁, …, πₘ</span>, each with a score. Executing them gives candidate answers <span class="formula-inline">A₁, …, Aₘ</span>. This final module decides which answer to choose, when to clarify, whether to abstain, and how to present what was found.</p>
+<h3>Learning objectives</h3>
+<ol>
+<li>Choose between candidate answers using expected utility, including uneven costs for different kinds of mistake.</li>
+<li>Treat the user's explicit requirements as hard constraints that come before any score.</li>
+<li>Raise confidence when independent derivations agree.</li>
+<li>Decide between answering, hedging and asking with the value of information.</li>
+<li>Set an answer threshold from a risk–coverage trade-off.</li>
+<li>Match the presentation format to the intent, and round numbers to their real precision.</li>
+<li>Trace one question end to end through all six modules.</li>
+</ol>
+<table><tr><th>Decision</th><th>Question</th><th>Section</th></tr>
+<tr><td>Selection</td><td>Which candidate is best?</td><td>6.2–6.4</td></tr><tr><td>Action</td><td>Answer, answer with stated assumptions, or ask first?</td><td>6.5</td></tr><tr><td>Abstention</td><td>When is it better not to answer at all?</td><td>6.6</td></tr><tr><td>Presentation</td><td>What form should the answer take?</td><td>6.7</td></tr></table>
+<p>The highest-scoring candidate is usually the right choice, but not always. A score measures probability, while the decision must also weigh consequences.</p>
+<div class="callout plain" data-tag="In plain English"><p>The most likely answer is not automatically the best answer. If a mistake is costly, a slightly less likely answer—or no answer yet—can be the wiser decision.</p></div>
+<div class="flow"><div class="node"><b>1 · Rank</b>Generate plausible answer plans</div><span class="arrow">→</span><div class="node"><b>2 · Filter</b>Discard candidates that break explicit requirements</div><span class="arrow">→</span><div class="node"><b>3 · Decide</b>Compare utility, evidence and the cost of asking</div><span class="arrow">→</span><div class="node"><b>4 · Deliver</b>Answer, hedge, ask or abstain in the right format</div></div>
+</section>
+
+<section data-toc="6.2 Expected utility">
+<h2><span class="n">6.2</span>Expected utility</h2>
+<h3>Definition</h3>
+<p>Let <i>w</i> range over possible states of the world, such as which interpretation the user meant. Each candidate answer <i>A</i> has utility <i>U(A,w)</i>: how good it is if the world is <i>w</i>.</p>
+<div class="formula">EU(A) = Σ<sub>w</sub> P(w | Q, evidence) · U(A, w)
+A* = argmax<sub>A</sub> EU(A)</div>
+<h3>The simplest case: right or wrong</h3>
+<p><i>G</i> is the gain from a correct answer. <i>L</i> is the loss from a wrong answer that someone acts on.</p>
+<div class="formula">EU(A) = P(correct) · G − P(wrong) · L</div>
+<p>In business settings, <i>L</i> is usually larger than <i>G</i>. A confident wrong number in a board deck costs more than a correct number gains.</p>
+<div class="worked"><h4>Worked example</h4><p><b>G = 1 and L = 2.</b></p>
+<table><tr><th>Candidate</th><th>Description</th><th class="num">P(correct)</th><th>EU</th></tr>
+<tr class="win"><td>A₁</td><td>Certified monthly summary</td><td class="num">0.70</td><td>0.70(1) − 0.30(2) = +0.10</td></tr>
+<tr><td>A₂</td><td>Aggregated from raw transactions</td><td class="num">0.60</td><td>0.60(1) − 0.40(2) = −0.20</td></tr></table>
+<p>A₁ is the better choice. But EU = +0.10 is only slightly positive: with this loss ratio, even the best candidate is close to the point where answering stops being worthwhile.</p></div>
+<h3>Break-even confidence</h3>
+<p>Answering beats saying nothing (EU = 0) when:</p>
+<div class="formula">P · G − (1 − P) · L &gt; 0  ⟺  P &gt; L / (G + L)</div>
+<table><tr><th>Loss ratio L : G</th><th class="num">Break-even P</th></tr><tr><td>1 : 1</td><td class="num">0.50</td></tr><tr><td>2 : 1</td><td class="num">0.67</td></tr><tr><td>4 : 1</td><td class="num">0.80</td></tr><tr><td>9 : 1</td><td class="num">0.90</td></tr></table>
+<p>Lesson: the confidence threshold for answering isn't a fixed number. It follows from how costly a wrong answer would be. A high-stakes question needs more certainty.</p>
+<div class="widget" data-w="utility" data-title="Expected utility: move confidence, gain and loss"></div>
+<div class="callout analogy" data-tag="Analogy"><p>Think of answering as placing a bet. Confidence is the chance the bet wins; gain and loss set the payoff. A high penalty for being wrong raises the probability you need before placing it.</p></div>
+</section>
+
+<section data-toc="6.3 Hard constraints">
+<h2><span class="n">6.3</span>Hard constraints come first</h2>
+<p>Some requirements aren't trade-offs: they're conditions that any acceptable answer must meet. Every filter, threshold and grouping the user stated explicitly is a hard constraint <i>κ</i>.</p>
+<h3>Feasible set, then optimize</h3>
+<div class="formula">F = { A : A ⊨ κ for every explicit constraint κ in Q }
+A* = argmax<sub>A ∈ F</sub> EU(A)</div>
+<p>This is a lexicographic decision: satisfy the constraints first, and compare scores only within the feasible set. A higher score never buys back a violated constraint.</p>
+<div class="worked"><h4>Worked example</h4><p><b>Question:</b> “Q3 revenue in EMEA, excluding returns.” Three constraints: κ₁ = Q3, κ₂ = EMEA, κ₃ = excludes returns.</p>
+<table><tr><th>Candidate</th><th>Score</th><th>κ₁</th><th>κ₂</th><th>κ₃</th><th>Feasible?</th></tr>
+<tr class="lose"><td>A₁ Gross revenue summary</td><td>0.85</td><td>✓</td><td>✓</td><td>✗ (includes returns)</td><td>No</td></tr>
+<tr class="win"><td>A₂ Net revenue summary</td><td>0.72</td><td>✓</td><td>✓</td><td>✓</td><td>Yes</td></tr>
+<tr><td>A₃ Transactions, returns filtered</td><td>0.65</td><td>✓</td><td>✓</td><td>✓</td><td>Yes</td></tr></table>
+<p>A₂ is chosen. A₁ has the highest score but is removed, however convenient it looks.</p></div>
+<h3>When nothing is feasible</h3>
+<div class="formula">F = ∅  ⇒  do not relax constraints silently
+       ⇒  report which constraint cannot be met, and why</div>
+<p>For example, if no source tracks returns separately, say so. Don't quietly return gross revenue.</p>
+<div class="callout warn" data-tag="Why so strict?"><p>A user who stated a filter will assume it was applied. Silently dropping it gives an answer that looks right and is wrong, which is the most damaging kind of error.</p></div>
+<div class="widget" data-w="feasibility" data-title="Hard-constraint filter: scores cannot rescue a failed requirement"></div>
+</section>
+
+<section data-toc="6.4 Independent agreement">
+<h2><span class="n">6.4</span>Agreement between independent derivations</h2>
+<p>If two independent plans reach the same answer, that agreement is strong evidence. Two wrong methods rarely produce the same wrong number.</p>
+<h3>Bayesian update</h3>
+<p>Let <i>H</i> = “answer A₁ is correct”.</p>
+<div class="formula">P(H | agree) = P(agree | H) · P(H)
+                ────────────────────────────────────────────────
+                P(agree | H) · P(H) + P(agree | ¬H) · P(¬H)</div>
+<div class="worked"><h4>Worked example</h4>
+<p>Prior: P(A₁ correct) = 0.70. A₂, derived independently, is correct with probability 0.60. If A₂ is wrong it matches A₁ only by coincidence, with probability 0.05. If A₁ is wrong, A₂ matches it only by coincidence, with probability 0.05.</p>
+<div class="formula">P(agree | H)  = 0.60 + 0.40 × 0.05 = 0.62
+P(agree | ¬H) = 0.05
+P(H | agree)  = 0.70 × 0.62 / (0.70 × 0.62 + 0.30 × 0.05)
+              = 0.434 / (0.434 + 0.015)
+              = 0.434 / 0.449 ≈ 0.97</div>
+<p>Agreement raises confidence from 70% to about 97%.</p></div>
+<div class="widget" data-w="agreement" data-title="Bayesian agreement updater + disagreement clue finder"></div>
+<h3>Disagreement is also informative</h3>
+<p>If the two results differ, confidence in A₁ falls, and the size of the gap often points to the cause:</p>
+<table><tr><th>Pattern of gap</th><th>Likely cause</th></tr>
+<tr><td>Exact multiple (2×, 3×)</td><td>Fan-out join (Module 3)</td></tr><tr><td>Small, steady % gap</td><td>Different definition (gross vs. net) or exclusion rule</td></tr><tr><td>One period differs</td><td>Time-window or partial-period mismatch (Module 4)</td></tr><tr><td>Opposite sign</td><td>Refunds or credits treated differently</td></tr></table>
+<h3>Majority vote over several plans</h3>
+<p>With <i>n</i> plans, choose the answer most of them agree on:</p>
+<div class="formula">A* = argmax<sub>a</sub> Σ<sub>j</sub> w<sub>j</sub> · 1[A<sub>j</sub> = a]  (w<sub>j</sub> = plan confidence)</div>
+<p>This is called <b>self-consistency</b>. It is only valuable when the plans are genuinely independent: different sources or different paths. Five runs of the same plan agreeing proves nothing.</p>
+<div class="callout note" data-tag="Independence matters"><p>Agreement is not five independent votes if every result inherits the same join, source, or interpretation. Shared failure modes make repeated outputs look more certain than they are.</p></div>
+</section>
+
+<section data-toc="6.5 Answer, hedge or ask">
+<h2><span class="n">6.5</span>Answer, hedge or ask? The value of information</h2>
+<p>When interpretations compete, there are three actions:</p>
+<table><tr><th>Action</th><th>What happens</th></tr><tr><td>Answer</td><td>Commit to the most likely interpretation silently</td></tr><tr><td>Hedge</td><td>Answer, stating the assumption so the user can correct it</td></tr><tr><td>Ask</td><td>Clarify first, then answer correctly, at a cost <i>c</i> (time, friction)</td></tr></table>
+<h3>Value of perfect information</h3>
+<div class="formula">EU(answer)       = max<sub>a</sub> Σ<sub>w</sub> P(w) · U(a, w)       ← best choice under uncertainty
+EU(perfect info) = Σ<sub>w</sub> P(w) · max<sub>a</sub> U(a, w)   ← best choice if w were known
+VOI              = EU(perfect info) − EU(answer)
+Ask ⟺ VOI &gt; c</div>
+<p>VOI is never negative: knowing more can't make the best decision worse.</p>
+<div class="worked"><h4>Worked example: two interpretations</h4>
+<p>There are two interpretations, w₁ with P = 0.6 and w₂ with P = 0.4. Utilities: correct = +1, silently wrong = −2, wrong but assumption stated = −0.5. A stated assumption lets the user catch the error quickly, so the loss is smaller.</p>
+<div class="formula">Answer (w₁, silently):  0.6(1) + 0.4(−2)   = 0.6 − 0.8 = −0.20
+Hedge (w₁, stated):    0.6(1) + 0.4(−0.5) = 0.6 − 0.2 = +0.40
+Ask:                    1 − c
+VOI (vs. silent answer) = 1 − (−0.20) = 1.20</div>
+<table><tr><th>Cost of asking c</th><th>EU(ask)</th><th>Best action</th></tr><tr><td>0.3</td><td>0.70</td><td>Ask</td></tr><tr><td>0.6</td><td>0.40</td><td>Tie between ask and hedge</td></tr><tr><td>0.8</td><td>0.20</td><td>Hedge</td></tr></table>
+<p>Even a very cheap question doesn't make a silent answer worthwhile here. Silent answering is dominated by hedging at every cost.</p></div>
+<div class="worked"><h4>Same setup, more confidence</h4><p>With P(w₁) = 0.9:</p>
+<div class="formula">Answer: 0.9 − 0.1(2)   = 0.70
+Hedge:  0.9 − 0.1(0.5) = 0.85
+Ask:    1 − c          = 0.70 at c = 0.3</div>
+<p>Hedge wins: interruptions aren't worth it when one interpretation is strongly favoured, but the assumption is still worth stating.</p></div>
+<h3>Decision summary</h3>
+<div class="formula">high confidence, low stakes          → answer, briefly noting any assumption
+moderate confidence or high stakes   → hedge: answer plus stated assumptions and alternatives
+low confidence and high stakes       → ask</div>
+<div class="widget" data-w="action" data-title="Answer vs. hedge vs. ask: compare expected utility"></div>
+<div class="callout plain" data-tag="In plain English"><p>A hedge is not an apology. It is an immediate useful answer with the uncertain assumption made visible. Asking has value when the improvement is worth the interruption.</p></div>
+</section>
+
+<section data-toc="6.6 Risk and coverage">
+<h2><span class="n">6.6</span>Abstention: the risk–coverage trade-off</h2>
+<p>Across many questions, an answer threshold <i>τ</i> trades coverage against risk:</p>
+<div class="formula">Coverage(τ) = fraction of questions answered (Conf ≥ τ)
+Risk(τ)     = error rate among the answered questions</div>
+<div class="worked"><h4>Worked example: 100 questions</h4>
+<table><tr><th>Threshold τ</th><th>Answered</th><th>Wrong</th><th>Coverage</th><th>Risk</th></tr><tr><td>0.0</td><td>100</td><td>20</td><td>100%</td><td>20.0%</td></tr><tr><td>0.5</td><td>80</td><td>10</td><td>80%</td><td>12.5%</td></tr><tr class="win"><td>0.7</td><td>60</td><td>3</td><td>60%</td><td>5.0%</td></tr><tr><td>0.9</td><td>30</td><td>1</td><td>30%</td><td>3.3%</td></tr></table>
+<p>Goal: keep risk ≤ 5%. The lowest threshold that meets the target is τ = 0.7, which answers 60% of questions.</p>
+<div class="formula">τ* = min { τ : Risk(τ) ≤ target }  ← maximize coverage subject to a risk budget</div></div>
+<div class="widget" data-w="risk" data-title="Risk–coverage explorer: choose a risk budget"></div>
+<h3>Why calibration matters here</h3>
+<p>This curve only works if the confidence is calibrated (Module 4, section 4.10). If “0.8” really means “60% correct”, any threshold gives far more errors than expected.</p>
+<h3>Abstaining well</h3>
+<p>“I don't know” isn't the only alternative to an answer. Partial answers are often better:</p>
+<table><tr><th>Situation</th><th>Better than a flat refusal</th></tr><tr><td>One constraint can't be met</td><td>Answer the rest, and explain the gap</td></tr><tr><td>Two interpretations are equally likely</td><td>Show both, clearly labelled</td></tr><tr><td>Data is incomplete for the latest period</td><td>Answer for complete periods, and flag the partial one</td></tr></table>
+<div class="callout key" data-tag="Key idea"><p>Choose the lowest threshold that satisfies the risk budget. That preserves as much useful coverage as the target allows.</p></div>
+</section>
+
+<section data-toc="6.7 Presentation">
+<h2><span class="n">6.7</span>Presenting the answer</h2>
+<p>The answer's form should match the intent from Module 4:</p>
+<table><tr><th>Intent</th><th>Natural format</th></tr><tr><td>lookup / count</td><td>One headline number</td></tr><tr><td>aggregate</td><td>Table or bar chart by group</td></tr><tr><td>trend</td><td>Line chart over time</td></tr><tr><td>compare</td><td>Paired values with the difference and % change</td></tr><tr><td>rank</td><td>Ordered bar chart or table</td></tr><tr><td>distribution</td><td>Histogram or shares of a whole</td></tr><tr><td>explain</td><td>Waterfall: start → contributions → end</td></tr></table>
+<div class="widget" data-w="intent" data-title="Intent-to-format picker"></div>
+<h3>Answer first</h3>
+<p>Readers value the beginning of an answer most. Order the content by value: direct answer → key evidence → assumptions → detail.</p>
+<div class="flow"><div class="node hl"><b>1 · Direct answer</b>Lead with the result</div><span class="arrow">→</span><div class="node"><b>2 · Key evidence</b>Show the strongest support</div><span class="arrow">→</span><div class="node"><b>3 · Assumptions</b>Make uncertainty visible</div><span class="arrow">→</span><div class="node"><b>4 · Detail</b>Offer breakdowns and method</div></div>
+<h3>Round to the real precision</h3>
+<p>Don't report more digits than the uncertainty supports. With relative uncertainty ε:</p>
+<div class="formula">meaningful significant figures ≈ ⌈−log₁₀ ε⌉ + 1</div>
+<table><tr><th>ε</th><th>−log₁₀ ε</th><th>Significant figures</th><th>$1,047,382 reported as</th></tr><tr><td>5%</td><td>1.3</td><td>3</td><td>$1.05M</td></tr><tr><td>0.5%</td><td>2.3</td><td>4</td><td>$1.047M</td></tr></table>
+<p>Reporting “$1,047,382” when the answer is only good to ±5% implies a precision that isn't there.</p>
+<div class="widget" data-w="precision" data-title="Significant-figures tool: round to the uncertainty"></div>
+<h3>Make assumptions visible</h3>
+<p>Every latent variable inferred in Modules 3–4 (time window, calendar, entity choice, default exclusions) whose confidence was below about 0.9 should appear as a stated assumption. That is what makes the hedge in 6.5 work: it turns a −2 into a −0.5.</p>
+<div class="callout analogy" data-tag="Analogy"><p>A good answer is like a well-labelled chart: lead the eye to the conclusion, then expose the evidence and the assumptions that let someone check it.</p></div>
+</section>
+
+<section data-toc="6.8 Full pipeline">
+<h2><span class="n">6.8</span>The full pipeline, end to end</h2>
+<p><b>Question:</b> “Why did EMEA revenue drop last month compared to the month before, excluding test accounts?”</p>
+<p><b>Today:</b> 2026-10-21. <b>All figures are hypothetical.</b></p>
+<div class="callout note" data-tag="Capstone map"><p>Each numbered stage below reconstructs the extracted Module 1–6 fragments in their intended order. Use the step-through tool to focus on one decision at a time.</p></div>
+<div class="mini-flow">
+<div class="card"><h5>Module 1: Relevance</h5><p>Hybrid relevance × prior favours a certified monthly revenue summary (P ≈ 0.70).</p></div>
+<div class="card"><h5>Module 2: Concept mapping</h5><table><tr><th>Term</th><th>Concept</th></tr><tr><td>“revenue”</td><td>Revenue (net, the curated default)</td></tr><tr><td>“EMEA”</td><td>Region value (region context, from the noisy-channel prior)</td></tr><tr><td>“test accounts”</td><td>TestAccount flag</td></tr><tr><td>“last month” / “month before”</td><td>Time periods (resolved in Module 4)</td></tr></table></div>
+<div class="card"><h5>Module 3: Implicit relationships</h5><p>“Why” needs a breakdown by segment, so set cover adds transaction-level and customer sources.</p><p>Steiner tree: Transactions → Customers → Regions, and Transactions → Products, at a total cost of about 0.25, so P ≈ e<sup>−0.25</sup> ≈ 0.78.</p><p>Revenue flows only many-to-one, so there is no fan-out risk.</p><p>The test-account exclusion is explicit, so P = 1 (a hard constraint).</p></div>
+<div class="card"><h5>Module 4: Intent and entities</h5><p>Multiple intents: explain (0.85) and compare (0.80) → explain template.</p><p>Operator: <b>SUM</b>.</p><p>Time: last month = [2026-09-01, 2026-10-01); month before = [2026-08-01, 2026-09-01). Both are complete calendar months, so there's no partial-period trap.</p></div>
+<div class="card"><h5>Module 5: Matching, checks and ranking</h5><p>Hungarian matching assigns the revenue, region, date and test-flag fields.</p><p>“EMEA” is an exact match in the region field.</p><p><b>Combined stage confidence:</b></p><div class="formula">0.85 (intent) × 0.70 (source) × 0.90 (joins) × 0.95 (entities) × 0.90 (fields) ≈ 0.46</div></div>
+<div class="card"><h5>Module 6: Selection</h5><p>Independent reference consistency increases confidence; explicit constraints pass; the result is hedged and shown as a waterfall.</p></div>
+</div>
+<div class="widget" data-w="pipeline" data-title="Capstone step-through: six modules, confidence and waterfall"></div>
+<h3>Result and decomposition</h3>
+<p><b>Result (hypothetical):</b> August $5.00M → September $4.40M, so Δ Revenue = −$0.60M (−12%).</p>
+<p><b>Decomposition by country:</b></p>
+<table><tr><th>Segment</th><th class="num">Δ</th><th class="num">Share of the change</th></tr><tr><td>Germany</td><td class="num">−$0.45M</td><td class="num">75.0%</td></tr><tr><td>France</td><td class="num">−$0.20M</td><td class="num">33.3%</td></tr><tr><td>UK</td><td class="num">+$0.05M</td><td class="num">−8.3%</td></tr><tr><td>Other</td><td class="num">$0.00M</td><td class="num">0.0%</td></tr><tr class="win"><td>Total</td><td class="num">−$0.60M</td><td class="num">100%</td></tr></table>
+<p>Shares can be above 100% or negative when some segments offset others. Here, the UK's growth partly cancelled out the declines. The shares check: −0.45/−0.60 = 75.0%; −0.20/−0.60 = 33.3%; +0.05/−0.60 = −8.3%; the shares sum to 100%.</p>
+<h3>Independent reference and agreement update</h3>
+<p>Consistency with an independent reference: the certified summary reports September at $4.42M.</p>
+<div class="formula">relative gap = |4.40 − 4.42| / 4.42 ≈ 0.45%
+Consistency = exp(−2 × 0.0045) ≈ 0.991</div>
+<p>Agreement update (6.4): P(agree | correct) = 0.95 and P(agree | wrong) = 0.10.</p>
+<div class="formula">P(correct | agree) = 0.46 × 0.95 / (0.46 × 0.95 + 0.54 × 0.10)
+                   = 0.437 / (0.437 + 0.054) ≈ 0.89</div>
+<p>Hard constraints: EMEA ✓, both months ✓, test accounts excluded ✓, so the answer is feasible.</p>
+<p><b>Action (6.5):</b> confidence of 0.89 → hedge: answer directly, stating the calendar-month and net-revenue assumptions.</p>
+<p><b>Presentation (6.7):</b> an explain intent → waterfall chart, answer first:</p>
+<div class="callout key" data-tag="Answer first · hypothetical"><p><b>EMEA revenue fell 12% (−$0.6M) from August to September, driven mainly by Germany (75% of the decline) and France (33%), partly offset by UK growth.</b> Assumes calendar months and net revenue; test accounts excluded.</p></div>
+<h3>How confidence evolved</h3>
+<table><tr><th>After</th><th class="num">Confidence</th><th>Why it changed</th></tr><tr><td>Source selection</td><td class="num">0.70</td><td>One plausible certified source</td></tr><tr><td>All five stages</td><td class="num">0.46</td><td>Uncertainty compounds (Module 5)</td></tr><tr class="win"><td>Independent agreement</td><td class="num">0.89</td><td>Two derivations matched (6.4)</td></tr></table>
+</section>
+
+<section data-toc="6.9 Common pitfalls">
+<h2><span class="n">6.9</span>Common pitfalls</h2>
+<table class="pitfalls"><tr><th>Pitfall</th><th>Symptom</th><th>Fix in the math</th></tr>
+<tr><td>Picking the top score blindly</td><td>Confident answer that ignores the cost of being wrong</td><td>Expected utility with L &gt; G</td></tr>
+<tr><td>Trading constraints for score</td><td>User's filter silently dropped</td><td>Feasible set first, then optimize</td></tr>
+<tr><td>Relaxing constraints when F = ∅</td><td>“Close enough” answers that mislead</td><td>Report the infeasible constraint</td></tr>
+<tr><td>Counting dependent agreement</td><td>Five reruns “confirm” one error</td><td>Only independent plans count</td></tr>
+<tr><td>Always asking</td><td>User friction on easy questions</td><td>Ask only when VOI &gt; c</td></tr>
+<tr><td>Never asking</td><td>Silent misinterpretations</td><td>Hedge or ask when VOI is high</td></tr>
+<tr><td>Fixed threshold, uncalibrated scores</td><td>Risk far above the target</td><td>Calibrate, then set τ from risk–coverage</td></tr>
+<tr><td>False precision</td><td>“$1,047,382” from a ±5% estimate</td><td>Round to the supported significant figures</td></tr>
+<tr><td>Hidden assumptions</td><td>User can't spot the misreading</td><td>State every low-confidence inferred variable</td></tr></table>
+</section>
+
+<section data-toc="Check your understanding">
+<h2>Check your understanding</h2>
+<div class="check"><ol>
+<li><span class="q"><b>Compute:</b> P(correct) = 0.8, G = 1 and L = 3. What is EU(answer)? What break-even confidence does this loss ratio imply?</span><span class="a">EU = 0.8(1) − 0.2(3) = 0.8 − 0.6 = +0.20. Break-even P = 3 / (1 + 3) = 0.75.</span></li>
+<li><span class="q"><b>Compute:</b> two equally likely interpretations (0.5 each), with utility +1 if correct and −1 if wrong. What are EU(answer), EU(perfect info) and VOI? When should the system ask?</span><span class="a">EU(answer) = 0.5(1) + 0.5(−1) = 0. EU(perfect info) = 1. VOI = 1. Ask whenever the cost of asking c &lt; 1.</span></li>
+<li><span class="q"><b>Reason:</b> the top-scoring candidate violates one of the user's stated filters. What should happen?</span><span class="a">It is removed from the feasible set, whatever its score. Choose the best feasible candidate. If none exists, report which constraint can't be met.</span></li>
+<li><span class="q"><b>Compute:</b> prior P(correct) = 0.5, P(agree | correct) = 0.9 and P(agree | wrong) = 0.1. What is P(correct | agree)?</span><span class="a">0.5 × 0.9 / (0.5 × 0.9 + 0.5 × 0.1) = 0.45 / 0.50 = 0.90.</span></li>
+<li><span class="q"><b>Compute:</b> at some threshold, 50 of 100 questions are answered and 2 of those are wrong. What are the coverage and the risk?</span><span class="a">Coverage = 50%. Risk = 2 / 50 = 4%.</span></li>
+<li><span class="q"><b>Reason:</b> why can hedging beat both silent answering and asking?</span><span class="a">Hedging keeps most of the benefit of answering immediately (no cost c) while shrinking the loss if wrong, because a stated assumption lets the user correct it quickly. When confidence is moderate and asking is costly, that combination has the highest expected utility.</span></li>
+</ol></div>
+</section>
+
+<section data-toc="Key takeaways">
+<h2>Key takeaways</h2>
+<ul class="takeaways">
+<li>Expected utility, not raw score, picks the answer, and the threshold for answering follows from the cost of a wrong answer.</li>
+<li>The user's explicit requirements are hard constraints. Filter first, optimize second, and never relax them silently.</li>
+<li>Independent agreement sharply raises confidence, and the pattern of a disagreement points to its cause.</li>
+<li>Answer, hedge or ask is a value-of-information decision. Hedging is often the best middle ground.</li>
+<li>Thresholds come from a risk–coverage target and only work with calibrated confidence.</li>
+<li>Presentation follows intent: lead with the answer, round to the real precision, and state assumptions.</li>
+</ul>
+<h3>How the whole series fits together</h3>
+<div class="flow">
+<a class="node" href="m1.html"><b>Module 1 · Relevance</b>Which sources matter?<small>Cosine, BM25, concept coverage, priors, set cover</small></a><span class="arrow">→</span>
+<a class="node" href="m2.html"><b>Module 2 · Concept mapping</b>Do these words mean the same thing?<small>Equivalence classes, edit distance, softmax, noisy channel, PMI, ontology</small></a><span class="arrow">→</span>
+<a class="node" href="m3.html"><b>Module 3 · Implicit relationships</b>How do things connect, and what went unstated?<small>Schema graphs, −log P costs, paths, Steiner trees, entropy, latent variables</small></a><span class="arrow">→</span>
+<a class="node" href="m4.html"><b>Module 4 · Intent and entities</b>What shape of answer, about which things?<small>Naive Bayes, templates, aggregation, BIO tagging, joint assignment, calibration</small></a><span class="arrow">→</span>
+<a class="node" href="m5.html"><b>Module 5 · Matching, confidence and ranking</b>Which fields? How sure? What order?<small>Hungarian algorithm, stage confidence, robust z-scores, ranking, MMR, nDCG</small></a><span class="arrow">→</span>
+<div class="node hl"><b>Module 6 · Answer selection</b>Which answer, and how is it delivered?<small>Expected utility, constraints, agreement, VOI, risk–coverage</small></div>
+</div>
+<table><tr><th>Module</th><th>Core question</th><th>Key mathematical tools</th></tr>
+<tr><td>1. Relevance</td><td>Which sources matter?</td><td>Cosine similarity, BM25, concept coverage, Bayesian priors, set cover</td></tr>
+<tr><td>2. Concept mapping</td><td>Do these words mean the same thing?</td><td>Equivalence classes, edit distance, softmax and entropy, noisy channel, PMI, ontology similarity</td></tr>
+<tr><td>3. Implicit relationships</td><td>How do things connect, and what went unstated?</td><td>Schema graphs, −log P costs, shortest paths, Steiner trees, conditional entropy, latent variables</td></tr>
+<tr><td>4. Intent and entities</td><td>What shape of answer, about which things?</td><td>Naive Bayes, templates, aggregation rules, BIO tagging, joint assignment, calibration</td></tr>
+<tr><td>5. Matching, confidence and ranking</td><td>Which fields? How sure? What order?</td><td>Hungarian algorithm, stage confidence, robust z-scores, learning to rank, MMR, nDCG</td></tr>
+<tr class="win"><td>6. Answer selection</td><td>Which answer, and how is it delivered?</td><td>Expected utility, hard constraints, Bayesian agreement, value of information, risk–coverage</td></tr></table>
+<p><b>The whole pipeline in one line:</b></p>
+<div class="formula">A* = argmax<sub>A ∈ F(Q)</sub> Σ<sub>w</sub> P(w | Q, D, 𝒪, evidence) · U(A, w)</div>
+<p class="plainline">Among the answers that respect everything the user asked for, choose the one with the best expected outcome, given everything learned about what the question means and how the data fits together. If no answer clears the bar, ask.</p>
+<div class="callout plain" data-tag="In plain English"><p>The first five modules build and check a grounded interpretation. Module 6 takes that evidence, respects the user's hard requirements, weighs the consequences, and decides what to say—or whether to ask.</p></div>
+<p class="mini">Report generated by Databricks Genie.</p>
+</section>
+</main>
+<script src="modules.js"></script>
+<script src="lib.js"></script>
+<script src="w6.js"></script>
+</body>
+</html>

@@ -1,0 +1,248 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Module 1 | Training</title>
+<link rel="stylesheet" href="lesson.css">
+</head>
+<body data-module="1">
+<main id="lesson">
+
+<section data-toc="1.1 The big picture">
+<h2><span class="n">1.1</span>The big picture</h2>
+<p>Every business question asks the same thing: of all the data available, which pieces answer this, and how?</p>
+<p>We write that as a single goal: find the answer A that is most probable given the question Q, the data D and our business knowledge &#119978;.</p>
+<div class="formula">A* = argmax_A  P(A | Q, D, O)</div>
+<p class="plainline">out of every possible answer, pick the one that is most likely right, given what was asked, what data exists, and what we know about the business.</p>
+<p>This is too hard to solve in one step, so we split it into stages. Each later module covers one stage:</p>
+<div class="flow">
+  <div class="node hl"><b>Module 1 &middot; you are here</b>Relevance<br><small>Which sources are related to the question?</small></div><span class="arrow">&rarr;</span>
+  <div class="node"><b>Module 2</b>Concept mapping<br><small>Do &ldquo;sales&rdquo;, &ldquo;rev&rdquo; and &ldquo;turnover&rdquo; mean the same thing?</small></div><span class="arrow">&rarr;</span>
+  <div class="node"><b>Module 3</b>Implicit relationships<br><small>How do customers connect to orders?</small></div><span class="arrow">&rarr;</span>
+  <div class="node"><b>Module 4</b>Intent and entities<br><small>Trend, ranking or lookup? Which &ldquo;Paris&rdquo;?</small></div><span class="arrow">&rarr;</span>
+  <div class="node"><b>Module 5</b>Matching, confidence, ranking<br><small>Which field is which concept? How sure are we?</small></div><span class="arrow">&rarr;</span>
+  <div class="node"><b>Module 6</b>Answer selection<br><small>Which candidate answer wins?</small></div>
+</div>
+<div class="callout analogy" data-tag="Analogy">
+<p>Think of a good analyst walking into a library with a question. First they find the right shelves (Module 1), work out what the jargon means (2), figure out how the books cross-reference (3), clarify what the boss actually wants (4), locate the exact page and double-check the numbers (5), and finally decide how to present the answer, or whether to ask a follow-up (6). This system does the same steps, with probabilities instead of gut feel.</p>
+</div>
+</section>
+
+<section data-toc="1.2 The building blocks">
+<h2><span class="n">1.2</span>The building blocks (notation)</h2>
+<h3>The query</h3>
+<p>Q is the raw question, for example &ldquo;What were monthly sales by region?&rdquo;</p>
+<p>q = &phi;(Q) &isin; &#8477;<sup>d</sup> is its <b>embedding</b>: a list of d numbers that captures its meaning.</p>
+<p>C is the set of <b>business concepts</b>, such as Revenue, Customer, Region and Month.</p>
+<p>R is the set of typed <b>relationships</b> between them, such as Revenue <i>is-a</i> Financial Metric or Order <i>belongs-to</i> Customer.</p>
+<div class="callout plain" data-tag="In plain English">
+<p>An <b>embedding</b> is a &ldquo;meaning address&rdquo;. &phi; places every piece of text at a point in a very high-dimensional space so that texts with similar meanings land close together, even when they share no words. &ldquo;Turnover&rdquo; and &ldquo;revenue&rdquo; end up as neighbours.</p>
+</div>
+<p><b>Intuition:</b> &phi; is a function that places text in a &ldquo;meaning space&rdquo;. Texts with similar meanings land close together, even when they share no words.</p>
+
+<h3>The data sources</h3>
+<p>D = {d<sub>1</sub>, d<sub>2</sub>, &hellip;, d<sub>n</sub>} is the collection of tables, reports and documents. Each source is a bundle of facts about itself:</p>
+<div class="formula">d_i = (name, description, schema, sample values, usage metadata)</div>
+
+<h3>The ontology (business knowledge)</h3>
+<div class="formula">O = (C, R)</div>
+<p>A curated map of the business: its concepts and how they relate.</p>
+
+<h3>The lexicon</h3>
+<p>L : Words &rarr; C maps everyday wording to concepts:</p>
+<div class="formula">L("sales") = L("revenue") = L("rev") = Revenue</div>
+
+<h3>The concept function</h3>
+<p>C(&middot;) returns the set of concepts that a query or source is about:</p>
+<div class="formula">C("monthly sales by region") = { Revenue, Month, Region }</div>
+
+<svg class="diagram" viewBox="0 0 760 170" style="width:100%;height:auto" role="img" aria-label="Notation map">
+  <g font-size="12">
+    <rect x="10" y="20" width="170" height="60" fill="#fff" stroke="#1a1815"/><text x="95" y="45" text-anchor="middle" font-weight="700">Question Q</text><text x="95" y="63" text-anchor="middle" fill="#6f685b">&ldquo;monthly sales by region&rdquo;</text>
+    <rect x="300" y="5" width="160" height="40" fill="#fff" stroke="#1f6f8b"/><text x="380" y="30" text-anchor="middle">embedding q = &phi;(Q)</text>
+    <rect x="300" y="65" width="160" height="40" fill="#fff" stroke="#e8481c"/><text x="380" y="90" text-anchor="middle">words (for BM25)</text>
+    <rect x="300" y="125" width="160" height="40" fill="#fff" stroke="#1f7a52"/><text x="380" y="150" text-anchor="middle">concepts C(Q) via lexicon L</text>
+    <rect x="570" y="20" width="180" height="60" fill="#1a1815"/><text x="660" y="45" text-anchor="middle" fill="#f4f1ea" font-weight="700">Source d_i</text><text x="660" y="63" text-anchor="middle" fill="#cfc8b8">name, schema, samples, usage</text>
+    <rect x="570" y="100" width="180" height="50" fill="#faf7f0" stroke="#1a1815"/><text x="660" y="122" text-anchor="middle" font-weight="700">Ontology O = (C, R)</text><text x="660" y="139" text-anchor="middle" fill="#6f685b">curated business map</text>
+  </g>
+  <g stroke="#1a1815" stroke-width="1.5" fill="none"><path d="M180 40 L300 25"/><path d="M180 50 L300 85"/><path d="M180 60 L300 145"/><path d="M460 25 L570 45"/><path d="M460 85 L570 55"/><path d="M460 145 L570 125"/></g>
+  <text x="380" y="167" font-size="10" fill="#6f685b" text-anchor="middle">each view of the question is compared with the matching view of each source</text>
+</svg>
+</section>
+
+<section data-toc="1.3 Three signals of relevance">
+<h2><span class="n">1.3</span>Three signals of relevance</h2>
+<p>There are three independent ways a source can &ldquo;look related&rdquo; to a question. Each signal catches cases the others miss.</p>
+<div class="cards">
+  <div class="card"><h5>1 &middot; Semantic</h5><p><b>Meaning.</b> Cosine of embeddings.</p><p class="dim">+ catches paraphrases<br>&minus; confuses related-but-different ideas (revenue vs. cost)</p></div>
+  <div class="card"><h5>2 &middot; Lexical</h5><p><b>Exact words.</b> BM25.</p><p class="dim">+ precise on codes and names (&ldquo;SKU-4471&rdquo;)<br>&minus; blind to synonyms</p></div>
+  <div class="card"><h5>3 &middot; Concept</h5><p><b>Business meaning.</b> Coverage of C(Q).</p><p class="dim">+ grounded in curated knowledge<br>&minus; only as good as the ontology</p></div>
+</div>
+
+<h3>Signal 1: Semantic similarity (meaning)</h3>
+<p>Measure the angle between the two meaning-vectors with cosine similarity:</p>
+<div class="formula">cos(q, d) = (q &middot; d) / (&Vert;q&Vert; &middot; &Vert;d&Vert;)        range: &minus;1 to 1</div>
+<div class="worked"><h4>Mini example</h4>
+<p>q = (1, 1, 0) and d = (1, 0, 1).</p>
+<div class="formula">Dot product: 1&middot;1 + 1&middot;0 + 0&middot;1 = 1
+Norms: &Vert;q&Vert; = &radic;2 and &Vert;d&Vert; = &radic;2, so the product is 2
+cos = 1 / 2 = 0.5, which is moderately similar</div></div>
+<p><b>Strength:</b> catches paraphrases (&ldquo;turnover&rdquo; &asymp; &ldquo;revenue&rdquo;). <b>Weakness:</b> can confuse things that are related but different (&ldquo;revenue&rdquo; vs. &ldquo;cost&rdquo;).</p>
+<div class="widget" data-w="cosine" data-title="Cosine explorer: change the vectors, watch the angle"></div>
+<div class="callout plain" data-tag="In plain English">
+<p>Cosine ignores how <i>long</i> the vectors are and only asks &ldquo;are they pointing the same way?&rdquo; Set q = (1, 1, 0) and d = (1, 0, 1) above to reproduce the 0.5 from the example. Then make d a multiple of q: the cosine jumps to 1.</p></div>
+
+<h3>Signal 2: Lexical overlap (exact words)</h3>
+<p>BM25 is a classic keyword score. It rewards words that are shared and <b>rare</b>, and it adjusts for document length:</p>
+<div class="formula">BM25(Q, d) = &Sigma;_{t &isin; Q}  IDF(t) &middot; [ f(t,d) &middot; (k1 + 1) ] / [ f(t,d) + k1 &middot; (1 &minus; b + b &middot; |d| / avg|d|) ]
+
+IDF(t) = log( (N &minus; n_t + 0.5) / (n_t + 0.5) + 1 )</div>
+<ul>
+<li>f(t, d) is how often term t appears in d.</li>
+<li>n<sub>t</sub> is the number of sources that contain t, and N is the total number of sources.</li>
+<li>k<sub>1</sub> &asymp; 1.2 and b &asymp; 0.75 are tuning constants.</li>
+</ul>
+<p><b>Strength:</b> precise on exact codes and names (&ldquo;SKU-4471&rdquo;, &ldquo;EMEA&rdquo;). <b>Weakness:</b> blind to synonyms.</p>
+<div class="callout plain" data-tag="In plain English">
+<p><b>IDF</b> says a rare word is worth more than a common one: matching &ldquo;EMEA&rdquo; is a strong clue, matching &ldquo;the&rdquo; is none. The <b>k<sub>1</sub></b> term means the tenth repeat of a word adds far less than the first. The <b>b</b> term stops long documents winning just by containing more words.</p></div>
+<div class="widget" data-w="bm25" data-title="BM25 saturation: why repeating a keyword has diminishing returns"></div>
+
+<h3>Signal 3: Concept coverage (business meaning)</h3>
+<p>What fraction of the question&rsquo;s concepts does the source cover?</p>
+<div class="formula">coverage(Q, d) = |C(Q) &cap; C(d)| / |C(Q)|</div>
+<p><b>Strength:</b> grounded in curated business knowledge. <b>Weakness:</b> only as good as the ontology.</p>
+
+<h3>Combining them</h3>
+<div class="formula">rel(Q, d) = &alpha; &middot; cos(q, d)  +  &beta; &middot; BM25_norm(Q, d)  +  &gamma; &middot; coverage(Q, d)
+with  &alpha; + &beta; + &gamma; = 1,  all &ge; 0</div>
+<p>The weights say how much to trust each signal. They can be set by hand or learned from examples of good and bad matches.</p>
+<div class="callout key" data-tag="Why mix signals?">
+<p>Each one has blind spots. A weighted mix is more robust than any single signal, much like averaging several noisy measurements.</p></div>
+</section>
+
+<section data-toc="1.4 Adding trust with Bayes' rule">
+<h2><span class="n">1.4</span>Adding trust with Bayes&rsquo; rule</h2>
+<p>Being related isn&rsquo;t enough. A deprecated draft table can look just as related as a certified report. We add a <b>prior</b>: a belief about how trustworthy each source is before we even look at the question.</p>
+<h3>Bayes&rsquo; rule applied to sources</h3>
+<div class="formula">P(d | Q)  &prop;  P(Q | d)  &middot;  P(d)
+                  -------     ----
+                  "fit"       "trust"</div>
+<p>Here P(Q | d) is approximated by rel(Q, d).</p>
+<h3>A model for the prior</h3>
+<div class="formula">P(d) &prop; exp( w1 &middot; curated  +  w2 &middot; log(1 + usage)  &minus;  w3 &middot; staleness  &minus;  w4 &middot; deprecated )</div>
+<table>
+<tr><th>Feature</th><th>Effect</th><th>Reason</th></tr>
+<tr><td>curated / certified</td><td>&uarr;</td><td>Humans validated it</td></tr>
+<tr><td>log(1 + usage)</td><td>&uarr; (with diminishing returns)</td><td>Popular sources are battle-tested</td></tr>
+<tr><td>staleness</td><td>&darr;</td><td>Old data may mislead</td></tr>
+<tr><td>deprecated</td><td>&darr;&darr;</td><td>Explicitly retired</td></tr>
+</table>
+<div class="callout note" data-tag="Why the log?"><p>Going from 0 to 100 uses is a strong signal. Going from 10,000 to 10,100 adds almost nothing. The log captures these diminishing returns.</p></div>
+<div class="callout note" data-tag="Why exp?"><p>It keeps the prior positive and turns additive evidence into multiplicative odds, the same form as logistic regression.</p></div>
+<div class="widget" data-w="prior" data-title="Build a trust prior for one source"></div>
+</section>
+
+<section data-toc="1.5 Worked example">
+<h2><span class="n">1.5</span>Worked example</h2>
+<p><b>Question:</b> &ldquo;What were monthly sales by region?&rdquo;, so C(Q) = {Revenue, Month, Region}.</p>
+<h4>Candidate sources</h4>
+<table>
+<tr><th>Source</th><th>Description</th><th>Concepts covered</th></tr>
+<tr><td>d<sub>1</sub> orders_fact</td><td>Line-level orders with dates and amounts</td><td>Revenue, Month</td></tr>
+<tr><td>d<sub>2</sub> regional_revenue_summary (certified)</td><td>Monthly revenue rolled up by region</td><td>Revenue, Month, Region</td></tr>
+<tr><td>d<sub>3</sub> employee_directory</td><td>Staff names, roles and office region</td><td>Region</td></tr>
+</table>
+<p>Weights: &alpha; = 0.5, &beta; = 0.2, &gamma; = 0.3.</p>
+<h4>Step 1: Raw signals</h4>
+<table>
+<tr><th>Source</th><th class="num">cos</th><th class="num">BM25_norm</th><th class="num">coverage</th></tr>
+<tr><td>d<sub>1</sub></td><td class="num">0.72</td><td class="num">0.40</td><td class="num">2/3 &asymp; 0.667</td></tr>
+<tr><td>d<sub>2</sub></td><td class="num">0.85</td><td class="num">0.90</td><td class="num">3/3 = 1.000</td></tr>
+<tr><td>d<sub>3</sub></td><td class="num">0.20</td><td class="num">0.05</td><td class="num">1/3 &asymp; 0.333</td></tr>
+</table>
+<h4>Step 2: Combined relevance</h4>
+<div class="formula">rel(d1) = 0.5(0.72) + 0.2(0.40) + 0.3(0.667) = 0.360 + 0.080 + 0.200 = 0.640
+rel(d2) = 0.5(0.85) + 0.2(0.90) + 0.3(1.000) = 0.425 + 0.180 + 0.300 = 0.905
+rel(d3) = 0.5(0.20) + 0.2(0.05) + 0.3(0.333) = 0.100 + 0.010 + 0.100 = 0.210</div>
+<h4>Step 3: Apply priors and normalize</h4>
+<p>Assume the priors are P(d<sub>1</sub>) = 0.3, P(d<sub>2</sub>) = 0.5 (certified) and P(d<sub>3</sub>) = 0.2.</p>
+<table>
+<tr><th>Source</th><th class="num">rel &times; prior</th><th class="num">Posterior P(d | Q)</th></tr>
+<tr><td>d<sub>1</sub></td><td class="num">0.640 &times; 0.3 = 0.192</td><td class="num">0.192 / 0.6865 &asymp; 0.28</td></tr>
+<tr class="win"><td>d<sub>2</sub></td><td class="num">0.905 &times; 0.5 = 0.4525</td><td class="num">0.4525 / 0.6865 &asymp; 0.66</td></tr>
+<tr><td>d<sub>3</sub></td><td class="num">0.210 &times; 0.2 = 0.042</td><td class="num">0.042 / 0.6865 &asymp; 0.06</td></tr>
+</table>
+<p>The normalizer is 0.192 + 0.4525 + 0.042 = 0.6865.</p>
+<div class="callout key" data-tag="Result"><p>d<sub>2</sub> wins clearly. d<sub>1</sub> stays a credible backup, because it could be aggregated to answer the question. d<sub>3</sub> shares only the word &ldquo;region&rdquo; and is effectively ruled out.</p></div>
+<div class="widget" data-w="hybrid" data-title="Hybrid relevance + trust calculator (this exact example)"></div>
+<div class="callout plain" data-tag="Try this">
+<p>Click <b>Check #4</b> to swap the priors and watch d<sub>1</sub> overtake d<sub>2</sub>. Then drag &gamma; towards 0 (raise &alpha; and &beta;) and see how much the concept signal was protecting you from keyword-only matches.</p></div>
+</section>
+
+<section data-toc="1.6 When one source isn't enough">
+<h2><span class="n">1.6</span>When one source isn&rsquo;t enough: set cover</h2>
+<p>Some questions span several concepts that no single source holds. Change the question to &ldquo;monthly sales by region <b>and product category</b>&rdquo;:</p>
+<div class="formula">C(Q) = { Revenue, Month, Region, ProductCategory }</div>
+<p>If no source covers all four, we need the smallest set of sources whose combined coverage includes every needed concept:</p>
+<div class="formula">S* = argmin_{S &sube; D} |S|    subject to    C(Q) &sube; &cup;_{d &isin; S} C(d)</div>
+<p>This is the classic <b>set-cover</b> problem. Finding the exact solution is NP-hard, but a greedy approach works well in practice:</p>
+<div class="formula">Greedy set cover:
+  U &larr; C(Q)                       (concepts still needed)
+  S &larr; &empty;
+  while U &ne; &empty;:
+      d* &larr; argmax_d  |C(d) &cap; U| &middot; P(d | Q)     (most new coverage, weighted by trust)
+      S &larr; S &cup; {d*}
+      U &larr; U \ C(d*)
+  return S</div>
+<h4>Applied</h4>
+<ol>
+<li>Pick d<sub>2</sub>, which covers {Revenue, Month, Region}. Still needed: {ProductCategory}.</li>
+<li>Pick d<sub>4</sub> product_dim, which covers {ProductCategory}. Still needed: &empty;.</li>
+<li>S* = {d<sub>2</sub>, d<sub>4</sub>}. How to connect them is the subject of Module 3.</li>
+</ol>
+<div class="widget" data-w="setcover" data-title="Greedy set cover, one step at a time"></div>
+<div class="callout key" data-tag="Guarantee"><p>Greedy set cover is within a factor of ln|C(Q)| + 1 of the optimal solution. For a 4-concept question, that means at most about 2.4&times; as many sources as the best possible answer, and usually far fewer.</p></div>
+<div class="callout analogy" data-tag="Analogy"><p>It is packing for a trip with the fewest bags: at each step grab the bag that holds the most still-unpacked items (preferring bags you trust), then repeat until everything is packed.</p></div>
+</section>
+
+<section data-toc="1.7 Common pitfalls">
+<h2><span class="n">1.7</span>Common pitfalls</h2>
+<table class="pitfalls">
+<tr><th>Pitfall</th><th>Symptom</th><th>Fix in the math</th></tr>
+<tr><td>Relying only on semantic similarity</td><td>Picks &ldquo;cost&rdquo; tables for &ldquo;revenue&rdquo; questions</td><td>Add lexical and coverage terms (&beta;, &gamma; &gt; 0)</td></tr>
+<tr><td>Relying only on keywords</td><td>Misses &ldquo;turnover&rdquo; when the table says &ldquo;revenue&rdquo;</td><td>Add semantic similarity (&alpha; &gt; 0)</td></tr>
+<tr><td>Ignoring trust</td><td>Picks a deprecated draft table</td><td>Multiply by the prior P(d)</td></tr>
+<tr><td>Single-source assumption</td><td>Can&rsquo;t answer questions that span several concepts</td><td>Solve set cover</td></tr>
+<tr><td>Unbounded popularity</td><td>One huge table dominates everything</td><td>Use log(1 + usage), not raw usage</td></tr>
+</table>
+</section>
+
+<section data-toc="Check your understanding">
+<h2>Check your understanding</h2>
+<div class="check"><ol>
+<li><span class="q"><b>Compute:</b> given q = (2, 0, 1) and d = (1, 1, 1), what is cos(q, d)?</span><span class="a">q&middot;d = 2 + 0 + 1 = 3; &Vert;q&Vert; = &radic;5 &asymp; 2.236; &Vert;d&Vert; = &radic;3 &asymp; 1.732; cos &asymp; 3 / 3.873 &asymp; 0.775</span></li>
+<li><span class="q"><b>Reason:</b> two sources have identical relevance, but one is certified and the other is deprecated. Which part of the formula separates them?</span><span class="a">The prior P(d): the curated (+) and deprecated (&minus;) terms in the exponent.</span></li>
+<li><span class="q"><b>Apply:</b> if &gamma; = 0, what kind of mistake becomes more likely?</span><span class="a">Sources that sound right but don&rsquo;t hold the needed business concepts get selected. In other words, there&rsquo;s no check against the ontology.</span></li>
+<li><span class="q"><b>Extend:</b> in the worked example, raise d<sub>1</sub>&rsquo;s prior to 0.6 and lower d<sub>2</sub>&rsquo;s to 0.2, keeping d<sub>3</sub> at 0.2. Does the ranking change?</span><span class="a">d<sub>1</sub>: 0.640 &times; 0.6 = 0.384. d<sub>2</sub>: 0.905 &times; 0.2 = 0.181. Yes, d<sub>1</sub> now ranks first. Priors can override relevance, which is why they need careful calibration. <i>(Verify with the calculator above.)</i></span></li>
+</ol></div>
+</section>
+
+<section data-toc="Key takeaways">
+<h2>Key takeaways</h2>
+<ul class="takeaways">
+<li>A question and its sources become vectors, word sets and concept sets, and relevance compares all three.</li>
+<li>Hybrid scoring balances meaning, exact wording and business concepts.</li>
+<li>Bayes&rsquo; rule turns &ldquo;looks related&rdquo; into &ldquo;is related <b>and</b> trustworthy&rdquo;.</li>
+<li>Set cover decides how many sources a question needs.</li>
+</ul>
+<div class="next"><h4>Coming next: Module 2, Concept Mapping</h4><p>How do &ldquo;sales&rdquo;, &ldquo;rev&rdquo;, &ldquo;turnover&rdquo; and code &ldquo;R01&rdquo; all collapse into one concept? We&rsquo;ll cover equivalence classes, probabilistic disambiguation with softmax, noisy-channel abbreviation expansion, PMI for codes, and semantic distance in an ontology graph.</p></div>
+</section>
+
+</main>
+<script src="modules.js"></script>
+<script src="lib.js"></script>
+<script src="w1.js"></script>
+</body>
+</html>
