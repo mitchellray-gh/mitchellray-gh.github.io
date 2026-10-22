@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Ranking sandbox | Training</title>
+<link rel="stylesheet" href="lesson.css">
+<style>
+html,body{overflow-x:hidden}
+#lesson{max-width:100%}
+#lesson p,#lesson li,#lesson dd,#lesson dt,#lesson label,#lesson td,#lesson th,#lesson summary,#lesson small,#lesson button,#lesson textarea,#lesson input,#lesson output,.bars .b,.bars .b .v,.widget .out,.widget label{font-size:.9rem}
+.widget label{font-weight:700}
+.back{display:inline-block;margin:0 0 1rem;font-size:.9rem;font-weight:700}
+.widget textarea{font:inherit;font-size:.9rem;padding:.35rem .55rem;border:1.5px solid var(--rule);background:var(--surface2);width:100%;max-width:100%;box-sizing:border-box;min-height:3.4rem;resize:vertical}
+.src{border:1px solid var(--border);background:var(--surface2);padding:.7rem .8rem;margin:0 0 .7rem}
+.src .row{margin-bottom:.4rem}
+.src .rm{flex:0 0 auto}
+.tw{overflow-x:auto;max-width:100%;margin:.4rem 0 .8rem}
+.tw table{border-collapse:collapse;min-width:640px}
+.tw th,.tw td{border:1px solid var(--border);padding:.3rem .5rem;text-align:right;font-family:var(--mono);white-space:nowrap}
+.tw th:first-child,.tw td:first-child{text-align:left}
+.c-f{color:#1f7a52;font-weight:700}
+.c-k1{color:#6b4fbb;font-weight:700;background:#f4f0ff;padding:0 .25em}
+.c-b{color:#8a5a00;font-weight:700;background:#fff3d6;padding:0 .25em}
+.c-d{color:#1f6f8b;font-weight:700}
+.c-avg{color:#c2185b;font-weight:700}
+.c-idf{color:#c0390f;font-weight:700}
+details.arith{border:1px solid var(--border);background:var(--surface);padding:.5rem .8rem;margin:.6rem 0}
+details.arith>summary{cursor:pointer;font-weight:700}
+.bars .b{grid-template-columns:minmax(80px,170px) 1fr 70px}
+.bars .b .n{overflow-wrap:anywhere}
+.note2{color:var(--dim)}
+</style>
+</head>
+<body>
+<main id="lesson">
+<a class="back" href="index.html">&larr; Training</a>
+<h1>Ranking sandbox</h1>
+<p>Type a question, edit the candidate sources, and move the sliders. Everything below is recomputed with real arithmetic: BM25, tf-idf cosine similarity, and a prior.</p>
+
+<div class="callout plain" data-tag="The exact blend used here">
+<p><b>combined = (BM25 / best BM25) &times; (0.5 + 0.5 &times; cosine) &times; prior</b></p>
+<p>BM25 is divided by the highest BM25 among the sources, so the best keyword match scores 1. Cosine similarity is between 0 and 1, and is blended in as a multiplier between 0.5 and 1, so a perfect direction match keeps the full score and no overlap halves it. The prior is the weight you set per source. If every BM25 is 0, the combined score is 0 for all sources.</p>
+</div>
+
+<div class="widget" id="sandbox">
+<div class="wh"><i>Sandbox</i>Ranking sandbox: edit anything, watch the ranking change</div>
+<div class="wb">
+<div class="row"><div class="ctl" style="flex-basis:100%"><label for="q">Question</label><input type="text" id="q" value="monthly sales by region" autocomplete="off"></div></div>
+<div class="row">
+<div class="ctl"><label for="k1"><span class="c-k1">k1</span> (term saturation) <output id="k1o">1.20</output></label><input type="range" id="k1" min="0" max="3" step="0.05" value="1.2"></div>
+<div class="ctl"><label for="b"><span class="c-b">b</span> (length penalty) <output id="bo">0.75</output></label><input type="range" id="b" min="0" max="1" step="0.05" value="0.75"></div>
+</div>
+<h3>Candidate sources</h3>
+<div id="srcs"></div>
+<div class="row"><button type="button" id="add">Add source</button><span class="note2" id="cnt"></span></div>
+
+<h3>Ranking</h3>
+<div class="out" id="out"></div>
+<div class="bars" id="bars"></div>
+
+<details class="arith" id="arith"><summary>Show the arithmetic</summary><div id="arithbody"></div></details>
+</div></div>
+
+<dl class="vars" id="legend"><div><dt class="c-f">f</dt><dd>How many times the query word appears in this source&rsquo;s text. <span class="ex">&ldquo;sales&rdquo; appears twice, so f = 2.</span></dd></div><div><dt class="c-k1">k1</dt><dd>How quickly repeats stop helping. 0 means a word counts once however often it appears; higher means repeats keep adding. <span class="ex">k1 = 1.2 is a common default.</span></dd></div><div><dt class="c-b">b</dt><dd>How strongly long sources are penalised. 0 ignores length; 1 scales fully by length. <span class="ex">b = 0.75 is a common default.</span></dd></div><div><dt class="c-d">|d|</dt><dd>Length of this source: its number of words. <span class="ex">A 12-word description has |d| = 12.</span></dd></div><div><dt class="c-avg">avg|d|</dt><dd>The average length, in words, over all the sources. <span class="ex">Lengths 10, 12 and 14 give avg|d| = 12.</span></dd></div><div><dt class="c-idf">IDF</dt><dd>Rarity of the word: ln(1 + (N &minus; n + 0.5)/(n + 0.5)), where N is the number of sources and n the number containing the word. Rare words weigh more. <span class="ex">A word in 1 of 3 sources scores higher than one in all 3.</span></dd></div></dl>
+
+<div class="callout note" data-tag="Term score formula">
+<p><span class="c-idf">IDF</span> &times; (<span class="c-f">f</span> &times; (<span class="c-k1">k1</span> + 1)) / (<span class="c-f">f</span> + <span class="c-k1">k1</span> &times; (1 &minus; <span class="c-b">b</span> + <span class="c-b">b</span> &times; <span class="c-d">|d|</span> / <span class="c-avg">avg|d|</span>))</p>
+<p>The numerator and denominator columns in the tables below are the top and bottom of that fraction, before multiplying by IDF. When the denominator would be 0 the term score is set to 0.</p>
+</div>
+</main>
+
+<script>
+(function () {
+  var DEFAULTS = [
+    { name: "sales_fact", desc: "Fact table of sales orders: order date, region, product, revenue and units sold per month.", prior: 1 },
+    { name: "customer_dim", desc: "Customer dimension: customer name, segment, region and signup date.", prior: 1 },
+    { name: "support_tickets", desc: "Support tickets: ticket id, opened date, priority, status and the agent who handled it.", prior: 1 }
+  ];
+  var MAXS = 5, MINS = 3;
+  var srcs = DEFAULTS.map(function (s) { return { name: s.name, desc: s.desc, prior: s.prior }; });
+  var $ = function (id) { return document.getElementById(id); };
+  var q = $("q"), k1El = $("k1"), bEl = $("b"), srcsEl = $("srcs");
+
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  function num(x, d) { x = Number(x); if (!isFinite(x)) x = 0; return x.toFixed(d === undefined ? 3 : d); }
+  function tokenize(s) { return (String(s || "").toLowerCase().match(/[a-z0-9]+/g)) || []; }
+  function counts(tokens) { var m = {}; tokens.forEach(function (t) { m[t] = (m[t] || 0) + 1; }); return m; }
+  function safe(x) { return isFinite(x) ? x : 0; }
+
+  function compute() {
+    var k1 = safe(parseFloat(k1El.value)), b = safe(parseFloat(bEl.value));
+    var qTok = tokenize(q.value), qTerms = Object.keys(counts(qTok));
+    var docs = srcs.map(function (s) {
+      var tok = tokenize(s.name + " " + s.desc);
+      return { s: s, tok: tok, tf: counts(tok), len: tok.length };
+    });
+    var N = docs.length;
+    var avgdl = N ? docs.reduce(function (a, d) { return a + d.len; }, 0) / N : 0;
+    function idfOf(t) {
+      var n = docs.filter(function (d) { return d.tf[t]; }).length;
+      return { n: n, idf: safe(Math.log(1 + (N - n + 0.5) / (n + 0.5))) };
+    }
+    var idfs = {};
+    qTerms.forEach(function (t) { idfs[t] = idfOf(t); });
+    var vocab = {};
+    qTerms.forEach(function (t) { vocab[t] = 1; });
+    docs.forEach(function (d) { Object.keys(d.tf).forEach(function (t) { vocab[t] = 1; }); });
+    var vocabList = Object.keys(vocab);
+    var qtf = counts(qTok);
+    function vec(tf) { return vocabList.map(function (t) { return (tf[t] || 0) * (idfs[t] ? idfs[t].idf : idfOf(t).idf); }); }
+    function cosine(a, c) {
+      var dot = 0, na = 0, nc = 0;
+      for (var i = 0; i < a.length; i++) { dot += a[i] * c[i]; na += a[i] * a[i]; nc += c[i] * c[i]; }
+      if (na <= 0 || nc <= 0) return 0;
+      return safe(Math.min(1, Math.max(0, dot / (Math.sqrt(na) * Math.sqrt(nc)))));
+    }
+    var qv = vec(qtf);
+    var rows = docs.map(function (d) {
+      var lenNorm = avgdl > 0 ? d.len / avgdl : 0;
+      var terms = qTerms.map(function (t) {
+        var f = d.tf[t] || 0, idf = idfs[t].idf;
+        var num_ = f * (k1 + 1);
+        var den = f + k1 * (1 - b + b * lenNorm);
+        var score = den > 0 ? safe(idf * num_ / den) : 0;
+        return { t: t, f: f, idf: idf, num: safe(num_), den: safe(den), score: score };
+      });
+      var bm25 = terms.reduce(function (a, x) { return a + x.score; }, 0);
+      return { name: d.s.name || "(unnamed)", len: d.len, prior: safe(d.s.prior), terms: terms, bm25: bm25, cos: cosine(qv, vec(d.tf)) };
+    });
+    var maxBm = rows.reduce(function (a, r) { return Math.max(a, r.bm25); }, 0);
+    rows.forEach(function (r) {
+      r.bm25n = maxBm > 0 ? r.bm25 / maxBm : 0;
+      r.blend = 0.5 + 0.5 * r.cos;
+      r.combined = safe(r.bm25n * r.blend * r.prior);
+    });
+    return { rows: rows, qTerms: qTerms, N: N, avgdl: avgdl, k1: k1, b: b };
+  }
+
+  function render() {
+    k1El.nextElementSibling; $("k1o").textContent = num(k1El.value, 2); $("bo").textContent = num(bEl.value, 2);
+    $("cnt").textContent = srcs.length + " sources (" + MINS + " to " + MAXS + ")";
+    var r = compute(), out = $("out"), bars = $("bars"), body = $("arithbody");
+    if (!r.qTerms.length) {
+      out.className = "out mid";
+      out.textContent = "Type a question with at least one letter or digit to rank the sources.";
+      bars.innerHTML = ""; body.innerHTML = "<p>No query terms yet, so there is nothing to calculate.</p>";
+      return;
+    }
+    var ranked = r.rows.slice().sort(function (a, c) { return c.combined - a.combined; });
+    var top = ranked[0];
+    if (top.combined > 0) {
+      out.className = "out good";
+      out.innerHTML = "<span class=\"verdict\">Top source: " + esc(top.name) + "</span> with combined score " + num(top.combined) + ". Query terms: " + r.qTerms.map(esc).join(", ") + ". N = " + r.N + ", avg|d| = " + num(r.avgdl, 2) + ".";
+    } else {
+      out.className = "out bad";
+      out.innerHTML = "<span class=\"verdict\">No source matches.</span> None of the query terms (" + r.qTerms.map(esc).join(", ") + ") appear in any source, or the priors are 0, so every score is 0.";
+    }
+    bars.innerHTML = ranked.map(function (x, i) {
+      var w = Math.max(0, Math.min(100, x.combined * 100));
+      return "<div class=\"b" + (i === 0 && x.combined > 0 ? " top" : "") + "\"><span class=\"n\">" + (i + 1) + ". " + esc(x.name) + "</span><span class=\"t\"><i style=\"width:" + w.toFixed(1) + "%\"></i></span><span class=\"v\">" + num(x.combined) + "</span></div>";
+    }).join("");
+
+    var open = {};
+    [].forEach.call(body.querySelectorAll("details"), function (d) { if (d.open) open[d.getAttribute("data-n")] = 1; });
+    body.innerHTML = r.rows.map(function (x, i) {
+      var trs = x.terms.map(function (t) {
+        return "<tr><td>" + esc(t.t) + "</td><td class=\"c-f\">" + t.f + "</td><td class=\"c-d\">" + x.len + "</td><td class=\"c-idf\">" + num(t.idf) + "</td><td>" + num(t.num) + "</td><td>" + num(t.den) + "</td><td><b>" + num(t.score) + "</b></td></tr>";
+      }).join("");
+      return "<details class=\"arith\" data-n=\"" + i + "\"" + (open[i] ? " open" : "") + "><summary>" + esc(x.name) + ": BM25 " + num(x.bm25) + ", cosine " + num(x.cos) + ", combined " + num(x.combined) + "</summary>" +
+        "<div class=\"tw\"><table><thead><tr><th>term</th><th class=\"c-f\">f(t,d)</th><th class=\"c-d\">|d|</th><th class=\"c-idf\">IDF(t)</th><th>numerator<br><span class=\"c-f\">f</span>&times;(<span class=\"c-k1\">k1</span>+1)</th><th>denominator<br><span class=\"c-f\">f</span>+<span class=\"c-k1\">k1</span>&times;(1&minus;<span class=\"c-b\">b</span>+<span class=\"c-b\">b</span>&times;<span class=\"c-d\">|d|</span>/<span class=\"c-avg\">avg|d|</span>)</th><th>term score</th></tr></thead><tbody>" + trs +
+        "<tr><td colspan=\"6\"><b>BM25 sum</b> (k1 = " + num(r.k1, 2) + ", b = " + num(r.b, 2) + ", avg|d| = " + num(r.avgdl, 2) + ")</td><td><b>" + num(x.bm25) + "</b></td></tr></tbody></table></div>" +
+        "<p>Normalised BM25 = " + num(x.bm25) + " / best = <b>" + num(x.bm25n) + "</b>. Blend = 0.5 + 0.5 &times; " + num(x.cos) + " = <b>" + num(x.blend) + "</b>. Prior = <b>" + num(x.prior, 2) + "</b>.<br>Combined = " + num(x.bm25n) + " &times; " + num(x.blend) + " &times; " + num(x.prior, 2) + " = <b>" + num(x.combined) + "</b></p></details>";
+    }).join("");
+  }
+
+  function buildSources() {
+    srcsEl.innerHTML = "";
+    srcs.forEach(function (s, i) {
+      var d = document.createElement("div");
+      d.className = "src";
+      d.innerHTML = "<div class=\"row\"><div class=\"ctl\"><label>Source name</label><input type=\"text\" class=\"sn\"></div>" +
+        "<div class=\"ctl\"><label>Prior weight <output class=\"po\"></output></label><input type=\"range\" class=\"sp\" min=\"0\" max=\"1\" step=\"0.05\"></div>" +
+        "<button type=\"button\" class=\"rm\">Remove</button></div>" +
+        "<label>Short description</label><textarea class=\"sd\" rows=\"2\"></textarea>";
+      var sn = d.querySelector(".sn"), sp = d.querySelector(".sp"), sd = d.querySelector(".sd"), po = d.querySelector(".po"), rm = d.querySelector(".rm");
+      sn.value = s.name; sd.value = s.desc; sp.value = s.prior; po.textContent = num(s.prior, 2);
+      rm.disabled = srcs.length <= MINS;
+      sn.addEventListener("input", function () { s.name = sn.value; render(); });
+      sd.addEventListener("input", function () { s.desc = sd.value; render(); });
+      sp.addEventListener("input", function () { s.prior = safe(parseFloat(sp.value)); po.textContent = num(s.prior, 2); render(); });
+      rm.addEventListener("click", function () { if (srcs.length > MINS) { srcs.splice(i, 1); buildSources(); render(); } });
+      srcsEl.appendChild(d);
+    });
+    $("add").disabled = srcs.length >= MAXS;
+  }
+
+  $("add").addEventListener("click", function () {
+    if (srcs.length < MAXS) { srcs.push({ name: "new_source_" + (srcs.length + 1), desc: "", prior: 1 }); buildSources(); render(); }
+  });
+  q.addEventListener("input", render);
+  k1El.addEventListener("input", render);
+  bEl.addEventListener("input", render);
+  buildSources();
+  render();
+})();
+</script>
+</body>
+</html>

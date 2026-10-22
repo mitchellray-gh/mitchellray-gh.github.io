@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow"><title>Glossary &amp; Search | Training</title>
+<link rel="stylesheet" href="lesson.css">
+<style>
+.topbar{padding:1rem 1.2rem;font-size:.9rem}.topbar a{color:var(--accent)}
+#lesson{max-width:900px;margin:0 auto;padding:0 1.2rem 3rem}
+#q{width:100%;padding:.7rem .9rem;font-size:1rem;border:1px solid var(--rule);background:var(--surface);color:var(--text);margin:.5rem 0 1rem;box-sizing:border-box}
+.tabs{display:flex;gap:.5rem;margin:.5rem 0}.tabs button{padding:.5rem 1rem;border:1px solid var(--rule);background:var(--surface);color:var(--text);cursor:pointer;font-size:.9rem}.tabs button.on{background:var(--text);color:var(--bg)}
+.gi{border-top:1px dashed var(--border);padding:.7rem 0}.gi .sym{font-family:var(--mono);font-weight:700;overflow-wrap:anywhere}
+.gi .src{font-size:.78rem;color:var(--dim)}.gi .src a{color:var(--accent)}
+.hit{background:#fff2b3;color:#1a1815}
+</style></head>
+<body><div class="topbar"><a href="index.html">&larr; Training</a></div>
+<main id="lesson">
+<h1>Glossary &amp; search</h1>
+<p>Every symbol and term explained in the lessons, collected in one place, plus full-text search across all six modules.</p>
+<div class="tabs"><button id="t1" class="on">Symbols &amp; terms</button><button id="t2">Search lessons</button></div>
+<input id="q" type="search" placeholder="Type e.g. k1, IDF, containment, softmax..." autofocus>
+<div id="out">Loading...</div>
+</main>
+<script src="modules.js"></script><script src="pages.js"></script>
+<script>
+let G = [], S = [], mode = 1;
+const out = document.getElementById("out"), q = document.getElementById("q");
+const hl = (h, t) => t ? h.replace(new RegExp("(" + t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + ")(?![^<]*>)", "gi"), '<span class="hit">$1</span>') : h;
+function draw() {
+  const t = q.value.trim().toLowerCase();
+  if (mode === 1) {
+    const r = G.filter(g => !t || g.txt.includes(t));
+    out.innerHTML = `<p class="caption">${r.length} entries</p>` + r.map(g => `<div class="gi"><div class="sym">${hl(g.dt, t)}</div><div>${hl(g.dd, t)}</div><div class="src">Module ${g.m} &middot; <a href="m${g.m}.html">${g.sec}</a></div></div>`).join("");
+  } else {
+    if (t.length < 2) { out.innerHTML = "<p>Type at least 2 characters.</p>"; return; }
+    const r = S.filter(s => s.txt.toLowerCase().includes(t)).slice(0, 60);
+    out.innerHTML = `<p class="caption">${r.length} matching sections</p>` + r.map(s => {
+      const i = s.txt.toLowerCase().indexOf(t), snip = esc(s.txt.slice(Math.max(0, i - 80), i + 140));
+      return `<div class="gi"><b>${s.sec}</b><div>&hellip;${hl(snip, t)}&hellip;</div><div class="src">Module ${s.m} &middot; <a href="m${s.m}.html">open lesson</a></div></div>`;
+    }).join("");
+  }
+}
+loadAll().then(all => {
+  all.forEach(({ m, doc }) => {
+    doc.querySelectorAll(".vars>div").forEach(d => {
+      const dt = d.querySelector("dt"), dd = d.querySelector("dd");
+      if (dt && dd) G.push({ m: m.id, sec: secOf(d), dt: dt.innerHTML, dd: dd.innerHTML, txt: (dt.textContent + " " + dd.textContent).toLowerCase() });
+    });
+    doc.querySelectorAll("section[data-toc]").forEach(s => S.push({ m: m.id, sec: s.dataset.toc, txt: s.textContent.replace(/\s+/g, " ") }));
+  });
+  G.sort((a, b) => a.dt.replace(/<[^>]+>/g, "").localeCompare(b.dt.replace(/<[^>]+>/g, "")));
+  draw();
+}).catch(e => out.textContent = "Could not load lessons (" + e + "). Open via the website, not a local file.");
+q.addEventListener("input", draw);
+[["t1", 1], ["t2", 2]].forEach(([id, v]) => document.getElementById(id).onclick = () => { mode = v; t1.className = v === 1 ? "on" : ""; t2.className = v === 2 ? "on" : ""; draw(); });
+</script></body></html>

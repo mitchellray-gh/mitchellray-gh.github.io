@@ -158,3 +158,4 @@ footer.sf{text-align:center;padding:2rem;font-size:.8rem;color:var(--dim);border
 .vars dd .ex{display:block;color:var(--dim);margin-top:.15rem}
 .vars dd .ex::before{content:"Example: ";font-weight:700}
 @media(max-width:560px){.vars>div{grid-template-columns:1fr}}
+@media print{header,.topbar,.pmap,.pager,.toc,.widget .wb button,footer.sf{display:none!important}body{background:#fff}.layout{display:block}.callout,.worked,.vars,.diagram,.widget{break-inside:avoid}}

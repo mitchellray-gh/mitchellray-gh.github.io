@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow"><title>Cheat sheets | Training</title>
+<link rel="stylesheet" href="lesson.css">
+<style>
+.topbar{padding:1rem 1.2rem;font-size:.9rem}.topbar a{color:var(--accent)}
+#lesson{max-width:900px;margin:0 auto;padding:0 1.2rem 3rem}
+.sel{display:flex;flex-wrap:wrap;gap:.5rem;margin:1rem 0}.sel button{padding:.5rem .9rem;border:1px solid var(--rule);background:var(--surface);color:var(--text);cursor:pointer}.sel button.on{background:var(--text);color:var(--bg)}
+.cs{border-top:1px dashed var(--border);padding:.6rem 0;break-inside:avoid}.cs h4{margin:.2rem 0;font-size:.85rem;color:var(--accent);text-transform:uppercase;letter-spacing:.06em}
+.keys{font-size:.85rem;color:var(--dim)}
+@media print{.topbar,.sel,.noprint{display:none}body{background:#fff}.formula{white-space:pre-wrap}}
+</style></head>
+<body><div class="topbar"><a href="index.html">&larr; Training</a></div>
+<main id="lesson">
+<h1>Cheat sheets</h1>
+<p>Every formula from a module on one page, with its plain-English meaning. Use <b>Print</b> to save as PDF.</p>
+<div class="sel" id="sel"></div><button class="noprint" onclick="print()">Print / save as PDF</button>
+<div id="out">Loading...</div>
+</main>
+<script src="modules.js"></script><script src="pages.js"></script>
+<script>
+let ALL = [], cur = 1;
+function draw() {
+  const { m, doc } = ALL[cur - 1];
+  let h = `<h2>Module ${m.id}: ${esc(m.title)}</h2>`;
+  doc.querySelectorAll(".formula").forEach(f => {
+    const pl = f.nextElementSibling && f.nextElementSibling.classList.contains("plainline") ? f.nextElementSibling : null;
+    const vars = f.closest("section,div") && (pl || f).nextElementSibling;
+    const dl = [pl, f.nextElementSibling, pl && pl.nextElementSibling].find(x => x && x.classList && x.classList.contains("vars"));
+    const keys = dl ? [...dl.querySelectorAll("dt")].slice(0, 8).map(d => d.innerHTML).join(" &nbsp;&middot;&nbsp; ") : "";
+    h += `<div class="cs"><h4>${secOf(f)}</h4><div class="formula">${esc(f.textContent)}</div>${pl ? `<p>${pl.innerHTML}</p>` : ""}${keys ? `<div class="keys">Symbols: ${keys}</div>` : ""}</div>`;
+  });
+  document.getElementById("out").innerHTML = h;
+  [...sel.children].forEach((b, i) => b.className = i + 1 === cur ? "on" : "");
+}
+loadAll().then(a => { ALL = a; sel.innerHTML = a.map(x => `<button>${x.m.id}. ${esc(x.m.title)}</button>`).join(""); [...sel.children].forEach((b, i) => b.onclick = () => { cur = i + 1; draw(); }); draw(); })
+  .catch(e => out.textContent = "Could not load (" + e + ").");
+</script></body></html>

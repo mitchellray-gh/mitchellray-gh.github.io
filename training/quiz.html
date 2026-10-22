@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow"><title>Final quiz | Training</title>
+<link rel="stylesheet" href="lesson.css">
+<style>
+.topbar{padding:1rem 1.2rem;font-size:.9rem}.topbar a{color:var(--accent)}
+#lesson{max-width:800px;margin:0 auto;padding:0 1.2rem 3rem}
+.qc{border:1px solid var(--border);background:var(--surface);padding:1rem;margin:0 0 1rem}
+.qc .a{display:none;margin-top:.6rem;padding:.6rem .8rem;background:var(--surface2);border-left:4px solid var(--accent)}.qc.open .a{display:block}
+.qc .src{font-size:.78rem;color:var(--dim)}
+.btn{padding:.5rem 1rem;border:1px solid var(--rule);background:var(--surface);color:var(--text);cursor:pointer;margin:.4rem .4rem 0 0;font-size:.9rem}.btn.on{background:var(--text);color:var(--bg)}
+.btn.good.on{background:#1f7a52;color:#fff}.btn.bad.on{background:#b3321a;color:#fff}
+#cert{display:none;border:6px double var(--text);padding:2rem;text-align:center;margin-top:1.5rem;background:#fff;color:#1a1815}
+#cert h2{font-size:1.8rem;margin:.3rem}#cert .nm{font-size:1.6rem;border-bottom:1px solid #1a1815;display:inline-block;min-width:60%;margin:.8rem 0}
+#nm{padding:.5rem;font-size:1rem;margin:.5rem 0;width:min(100%,320px)}
+@media print{.topbar,#qs,#res,.noprint{display:none}#cert{display:block!important}}
+</style></head>
+<body><div class="topbar"><a href="index.html">&larr; Training</a></div>
+<main id="lesson">
+<h1>Final quiz</h1>
+<p>12 random questions drawn from every module's check-yourself section. Read the question, answer in your head, reveal the answer, then mark yourself honestly. Score 80% or more to unlock a printable certificate.</p>
+<button class="btn" id="go">New random quiz</button> <span id="best" class="caption"></span>
+<div id="qs"></div><div id="res"></div>
+<div id="cert"><div>Certificate of completion</div><h2>How a System Answers a Business Question</h2><div>awarded to</div><div class="nm" id="cn">&nbsp;</div><div>for completing the six-module course and scoring <b id="cs"></b> on the final quiz</div><div id="cd" class="caption"></div></div>
+</main>
+<script src="modules.js"></script><script src="pages.js"></script>
+<script>
+let POOL = [], marks = {}, N = 12;
+const K = "training-quiz", best = () => +localStorage.getItem(K) || 0;
+function render() {
+  const pick = POOL.slice().sort(() => Math.random() - .5).slice(0, N); marks = {};
+  qs.innerHTML = pick.map((p, i) => `<div class="qc" id="c${i}"><div class="src">Module ${p.m} &middot; ${p.sec}</div><div>${i + 1}. ${p.q}</div><button class="btn" data-r="${i}">Show answer</button><div class="a">${p.a}</div><div><button class="btn good" data-g="${i}">I got it</button><button class="btn bad" data-b="${i}">Missed it</button></div></div>`).join("");
+  res.innerHTML = ""; cert.style.display = "none"; bestLbl();
+  qs.onclick = e => {
+    const t = e.target, g = t.dataset.g, b = t.dataset.b, r = t.dataset.r;
+    if (r != null) document.getElementById("c" + r).classList.add("open");
+    const k = g != null ? g : b; if (k == null) return;
+    marks[k] = g != null; const c = document.getElementById("c" + k); c.classList.add("open");
+    c.querySelector(".good").classList.toggle("on", marks[k]); c.querySelector(".bad").classList.toggle("on", !marks[k]);
+    const n = Object.keys(marks).length, ok = Object.values(marks).filter(Boolean).length;
+    res.innerHTML = `<p><b>${n} of ${pick.length} marked &middot; ${ok} correct</b></p>`;
+    if (n === pick.length) finish(ok, pick.length);
+  };
+}
+function bestLbl() { best() && (document.getElementById("best").textContent = "Best score: " + best() + "%"); }
+function finish(ok, n) {
+  const pct = Math.round(100 * ok / n); if (pct > best()) localStorage.setItem(K, pct); bestLbl();
+  res.innerHTML = `<div class="callout"><b>Final: ${ok} / ${n} (${pct}%)</b> &mdash; ${pct >= 80 ? "Passed. Enter your name for the certificate below." : "Below 80%. Re-read the sections you missed and try a new random quiz."}</div>` + (pct >= 80 ? `<input id="nm" placeholder="Your name"> <button class="btn noprint" onclick="print()">Print certificate</button>` : "");
+  if (pct >= 80) {
+    cert.style.display = "block"; cs.textContent = pct + "%"; cd.textContent = new Date().toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" });
+    nm.oninput = () => cn.textContent = nm.value || "\u00a0";
+  } else cert.style.display = "none";
+}
+loadAll().then(a => {
+  a.forEach(({ m, doc }) => doc.querySelectorAll(".check li").forEach(li => {
+    const q = li.querySelector(".q"), an = li.querySelector(".a");
+    if (q && an) POOL.push({ m: m.id, sec: secOf(li), q: q.innerHTML, a: an.innerHTML });
+  }));
+  go.onclick = render; render();
+}).catch(e => qs.textContent = "Could not load (" + e + ").");
+</script></body></html>

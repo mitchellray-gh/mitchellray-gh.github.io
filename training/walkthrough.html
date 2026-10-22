@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>One Question, Six Stages | Training</title>
+<link rel="stylesheet" href="lesson.css">
+</head>
+<body>
+<header class="topbar"><div class="in"><a class="logo" href="index.html">&larr; Training</a></div></header>
+<main id="lesson">
+<section data-toc="Walkthrough">
+<h1>One question, six stages</h1>
+<p class="lede">Follow <b>&ldquo;monthly sales by region&rdquo;</b> from its first words to a responsible answer. Each stage hands a concrete value to the next.</p>
+<div class="callout plain" data-tag="The question"><p>We want sales summarized by region and month. The course treats &ldquo;sales&rdquo; as the business concept <b>Revenue</b>; it does not silently invent a date range or a value for the result.</p></div>
+<div class="flow">
+  <div class="node"><b>1. Find sources</b>Relevance and trust</div><span class="arrow">&rarr;</span>
+  <div class="node"><b>2. Map terms</b>Words to concepts</div><span class="arrow">&rarr;</span>
+  <div class="node"><b>3. Find route</b>Tables and joins</div><span class="arrow">&rarr;</span>
+  <div class="node"><b>4. Parse</b>Intent and entities</div><span class="arrow">&rarr;</span>
+  <div class="node"><b>5. Fill plan</b>Slots to fields</div><span class="arrow">&rarr;</span>
+  <div class="node"><b>6. Decide</b>Answer, hedge, or ask</div>
+</div>
+<div class="svgscroll">
+<svg viewBox="0 0 1100 210" style="min-width:900px" role="img" aria-label="Six-stage pipeline from question to answer">
+  <rect x="8" y="50" width="160" height="92" rx="10" fill="#fff" stroke="#1a1815" stroke-width="2"/>
+  <rect x="192" y="50" width="160" height="92" rx="10" fill="#fff" stroke="#1a1815" stroke-width="2"/>
+  <rect x="376" y="50" width="160" height="92" rx="10" fill="#fff" stroke="#1a1815" stroke-width="2"/>
+  <rect x="560" y="50" width="160" height="92" rx="10" fill="#fff" stroke="#1a1815" stroke-width="2"/>
+  <rect x="744" y="50" width="160" height="92" rx="10" fill="#fff" stroke="#1a1815" stroke-width="2"/>
+  <rect x="928" y="50" width="160" height="92" rx="10" fill="#e6f3ec" stroke="#1f7a52" stroke-width="2"/>
+  <g fill="#1a1815" font-family="Arial, sans-serif" font-size="13" text-anchor="middle">
+    <text x="88" y="82" font-weight="700">1. Source</text><text x="88" y="104">regional summary</text><text x="88" y="124">beats alternatives</text>
+    <text x="272" y="82" font-weight="700">2. Concepts</text><text x="272" y="104">sales = Revenue</text><text x="272" y="124">Month, Region</text>
+    <text x="456" y="82" font-weight="700">3. Structure</text><text x="456" y="104">table / join path</text><text x="456" y="124">with evidence</text>
+    <text x="640" y="82" font-weight="700">4. Parse</text><text x="640" y="104">aggregate intent</text><text x="640" y="124">measure + groups</text>
+    <text x="824" y="82" font-weight="700">5. Plan</text><text x="824" y="104">slots match fields</text><text x="824" y="124">to the source</text>
+    <text x="1008" y="82" font-weight="700">6. Decide</text><text x="1008" y="104">answer, hedge,</text><text x="1008" y="124">or ask</text>
+  </g>
+  <g fill="none" stroke="#6f685b" stroke-width="2"><path d="M168 96H188"/><path d="M352 96H372"/><path d="M536 96H556"/><path d="M720 96H740"/><path d="M904 96H924"/></g>
+  <g fill="#6f685b"><path d="M188 91l7 5-7 5z"/><path d="M372 91l7 5-7 5z"/><path d="M556 91l7 5-7 5z"/><path d="M740 91l7 5-7 5z"/><path d="M924 91l7 5-7 5z"/></g>
+</svg>
+</div>
+</section>
+
+<section data-toc="1. Relevance and source selection">
+<h2>1. Relevance and source selection</h2>
+<p><b>What goes in:</b> The question, candidate source descriptions and schemas, text matches, semantic similarity, concept coverage, and each source&rsquo;s trust prior.</p>
+<div class="formula">rel(d) = 0.5 &middot; cos + 0.2 &middot; BM25_norm + 0.3 &middot; coverage
+P(d | Q) &prop; rel(d) &middot; P(d)</div>
+<dl class="vars"><div><dt>rel(d)</dt><dd>Combined relevance of source d to the question. <span class="ex">For d_2, regional_revenue_summary, the worked score is 0.905.</span></dd></div><div><dt>cos</dt><dd>Cosine similarity: semantic resemblance between question and source. <span class="ex">The worked d_2 value is 0.85.</span></dd></div><div><dt>BM25_norm</dt><dd>Normalized exact-word match score; BM25 rewards informative shared terms. <span class="ex">The worked d_2 value is 0.90.</span></dd></div><div><dt>coverage</dt><dd>Fraction of requested concepts a source covers. <span class="ex">d_2 covers Revenue, Month, and Region: 3/3 = 1.000.</span></dd></div><div><dt>0.5, 0.2, 0.3</dt><dd>Weights for cosine, BM25, and concept coverage in this worked example.</dd></div><div><dt>P(d)</dt><dd>Prior trust in source d, before using the question. <span class="ex">The certified d_2 prior is 0.5 in the worked example.</span></dd></div><div><dt>P(d | Q)</dt><dd>Normalized source probability after relevance and prior are combined. <span class="ex">The worked posteriors are d_2: about 0.66, d_1: about 0.28, and d_3: about 0.06.</span></dd></div><div><dt>&prop;</dt><dd>Proportional to: multiply the fit by its prior, then normalize across candidate sources.</dd></div></dl>
+<div class="worked"><h3>Handoff</h3><p><b>Choose d_2, regional_revenue_summary (certified).</b> Its posterior is about 0.66; orders_fact (d_1) remains a credible backup, while employee_directory (d_3) is a weak match.</p></div>
+<p><b>Why:</b> Cosine catches meaning, BM25 checks the words, and concept coverage checks business requirements. The prior lets certification and usage history influence the winner instead of treating every source as equally trustworthy.</p>
+<p><a href="m1.html">Lesson 1: Relevance and source selection</a></p>
+</section>
+
+<section data-toc="2. Lexicon and ontology mapping">
+<h2>2. Lexicon and ontology mapping</h2>
+<p><b>What goes in:</b> The question&rsquo;s surface words, the candidate source concepts, and the business lexicon and ontology.</p>
+<div class="cards">
+  <div class="card"><h3>sales</h3><p>Maps to the Revenue concept; the lesson lists sales, turnover, and income from sales as Revenue forms.</p></div>
+  <div class="card"><h3>monthly</h3><p>Maps to Month as the time grain.</p></div>
+  <div class="card"><h3>by region</h3><p>Maps to Region as the grouping concept.</p></div>
+</div>
+<div class="worked"><h3>Handoff</h3><p><b>Concept set:</b> {Revenue, Month, Region}. The candidate source d_2 explicitly has Revenue, Month, and Region fields.</p></div>
+<p><b>Why:</b> Different words can name the same business concept, so mapping sales to Revenue connects the user&rsquo;s language to the data model. Keeping concepts distinct also avoids treating a related measure, such as cost, as if it were sales.</p>
+<p><a href="m2.html">Lesson 2: Concept mapping</a></p>
+</section>
+
+<section data-toc="3. Schema graph and join paths">
+<h2>3. Schema graph and join paths</h2>
+<p><b>What goes in:</b> The concept set, tables and columns, candidate join edges, and evidence about how their values overlap.</p>
+<div class="formula">contain(x &sube; y) = shared distinct values / distinct values in x
+Orders.cust_id to Customers.customer_id: 940 / 950 &asymp; 0.989</div>
+<dl class="vars"><div><dt>contain(x &sube; y)</dt><dd>Directional containment: the fraction of distinct values in x that also appear in y. A high score supports x as a foreign key into y.</dd></div><div><dt>x</dt><dd>The column being checked. <span class="ex">Orders.cust_id has 950 distinct values in the lesson example.</span></dd></div><div><dt>y</dt><dd>The possible referenced column. <span class="ex">Customers.customer_id has 1,000 distinct values.</span></dd></div><div><dt>940</dt><dd>Number of values shared by the two columns in the lesson example.</dd></div><div><dt>940 / 950 &asymp; 0.989</dt><dd>Containment score: nearly all Orders customer IDs occur in Customers. The lesson also reports Jaccard similarity 0.931.</dd></div></dl>
+<div class="worked"><h3>Handoff</h3><p><b>Primary route:</b> d_2 is a single monthly regional summary, so no join is needed. <b>Fallback route:</b> the schema graph contains Regions &rarr; Customers &rarr; Orders; the high containment evidence supports the Orders-to-Customers link if the raw-orders backup is used.</p></div>
+<p><b>Why:</b> A graph makes candidate join paths explicit instead of guessing from table names. Directional containment helps distinguish a plausible foreign-key link from a mere overlap; the primary source can avoid joins altogether.</p>
+<p><a href="m3.html">Lesson 3: Schema graphs and join paths</a></p>
+</section>
+
+<section data-toc="4. Intent and entity parsing">
+<h2>4. Intent and entity parsing</h2>
+<p><b>What goes in:</b> The original words plus the mapped concepts and available source structure.</p>
+<div class="worked"><h3>Handoff</h3><p><b>Parse:</b> intent = aggregate; measure = Revenue; group dimensions = Region and Month; time grain = Month; explicit date window = none; explicit filters = none.</p></div>
+<p><b>Why:</b> &ldquo;By region&rdquo; asks for grouped values, and &ldquo;monthly&rdquo; supplies a time grain; together these describe an aggregate result rather than a top-N ranking. No region value or bounded time range was named, so the parser must not invent one.</p>
+<p><a href="m4.html">Lesson 4: Intent and entity parsing</a></p>
+</section>
+
+<section data-toc="5. Plan and slot filling">
+<h2>5. Plan and slot filling</h2>
+<p><b>What goes in:</b> The parsed intent, requested measure and dimensions, candidate source d_2, and the available fields.</p>
+<div class="worked"><h3>Handoff</h3><p><b>Plan:</b> aggregate Revenue for each Month and Region using d_2.Revenue, d_2.Month, and d_2.Region. Apply no unstated filters; return grouped results for the available months.</p></div>
+<p>The module&rsquo;s worked slot-matching example shows why a global assignment can beat a greedy pick: Revenue-to-amount scores 0.90 and Revenue-to-sales_total scores 0.80; the best full assignment totals 1.65 rather than the greedy 1.00. Those are that lesson&rsquo;s illustration scores, not invented confidence values for d_2; here the summary&rsquo;s named fields fit the requested slots directly.</p>
+<p><b>Why:</b> Slot filling turns an abstract request into field choices and an executable shape. Ranking complete plans avoids choosing one attractive field match that leaves another slot with a worse assignment.</p>
+<p><a href="m5.html">Lesson 5: Planning, slot filling, and ranking</a></p>
+</section>
+
+<section data-toc="6. Decision under uncertainty">
+<h2>6. Decision under uncertainty</h2>
+<p><b>What goes in:</b> Ranked plans and candidate answers, confidence in each answer, the cost of a wrong answer, and whether asking would resolve a consequential ambiguity.</p>
+<div class="worked"><h3>Handoff</h3><p>The course&rsquo;s worked decision comparison uses gain G = 1 and loss L = 2: the certified monthly-summary answer A_1 has P(correct) = 0.70 and expected utility +0.10; the raw-transaction answer A_2 has P(correct) = 0.60 and expected utility -0.20. Select the certified-summary path, but treat its small positive margin cautiously.</p></div>
+<p><b>Decision for this question:</b> Answer with a stated assumption that &ldquo;sales&rdquo; means Revenue, using d_2. Since no period is specified, say that results cover the available months. If the user needs a particular date range or gross-versus-net treatment and that choice matters, ask before presenting a definitive figure; otherwise hedge by making the assumption visible.</p>
+<p><b>Why:</b> The highest-confidence candidate is not automatically safe when errors are costly. Here the certified summary beats the raw aggregation in the lesson&rsquo;s own example, but the narrow utility margin supports disclosing the interpretation and asking when the missing detail could change the decision.</p>
+<p><a href="m6.html">Lesson 6: Decision under uncertainty</a></p>
+</section>
+
+<section data-toc="Whole picture and quiz">
+<h2>Whole picture</h2>
+<p>The question becomes a ranked source, then business concepts, a justified data route, a structured intent, and a field-filled plan. The final decision uses evidence and the cost of being wrong to choose whether to answer, hedge, or ask.</p>
+<div class="callout plain" data-tag="One-line trace"><p><b>monthly sales by region</b> &rarr; <b>d_2 regional_revenue_summary</b> &rarr; <b>{Revenue, Month, Region}</b> &rarr; <b>aggregate Revenue by Month and Region</b> &rarr; <b>disclose assumptions or clarify if material</b>.</p></div>
+<h2>Check your understanding</h2>
+<div class="check"><ol>
+<li><details><summary class="q"><b>Trace:</b> What three concepts should leave stage 2?</summary><div class="a show">Revenue, Month, and Region.</div></details></li>
+<li><details><summary class="q"><b>Reason:</b> Why is d_2 preferred to the raw-orders backup in the worked source example?</summary><div class="a show">It covers all three concepts, has the highest worked relevance (0.905), and is certified; its posterior is about 0.66 versus about 0.28 for d_1.</div></details></li>
+<li><details><summary class="q"><b>Decide:</b> What should the system do if the user needs a specific date range but has not stated one?</summary><div class="a show">Ask for the range if it matters; otherwise answer only with a clear statement of the assumption, such as covering all available months. Do not make up dates.</div></details></li>
+</ol></div>
+</section>
+</main>
+</body>
+</html>
