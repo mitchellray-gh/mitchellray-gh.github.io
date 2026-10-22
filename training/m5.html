@@ -23,6 +23,7 @@
 <p>By the end of Module 4 the question has been fully parsed:</p>
 <div class="formula">template(rank) = ⟨ measure = Revenue, dimension = Store, order = desc, N = 5,
                    location = Paris (France), time = [2026-07-01, 2026-10-01) ⟩</div>
+<dl class="vars"><div><dt>template(rank)</dt><dd>The structured request for a ranking result. <span class="ex">rank means the user wants results ordered</span></dd></div><div><dt>measure = Revenue</dt><dd>The numeric value to calculate; here, sales revenue. <span class="ex">Revenue</span></dd></div><div><dt>dimension = Store</dt><dd>The category used to group the measure. <span class="ex">one result per store</span></dd></div><div><dt>order = desc</dt><dd>Sort from largest to smallest; desc means descending. <span class="ex">highest revenue first</span></dd></div><div><dt>N = 5</dt><dd>The requested number of results, a count. <span class="ex">the top five stores</span></dd></div><div><dt>location</dt><dd>The geographic filter to apply. <span class="ex">Paris (France)</span></dd></div><div><dt>time = [2026-07-01, 2026-10-01)</dt><dd>A date range that includes its first date and excludes its last. <span class="ex">2026-07-01 is included; 2026-10-01 is not</span></dd></div><div><dt>&lang; &rang;</dt><dd>Angle brackets grouping all parts of this request into one template.</dd></div></dl>
 <p>The chosen sources still contain dozens of columns. Three gaps remain:</p>
 <table>
 <tr><th>Gap</th><th>Question</th><th>Sections</th></tr>
@@ -62,6 +63,7 @@
 <p>Choose a matching M: a set of slot&ndash;field pairs in which no slot and no field is used twice.</p>
 <div class="formula">M* = argmax_M  Σ_{(s,f) ∈ M} w(s, f)</div>
 <p class="plainline">choose the one-to-one pairing whose scores add up to the biggest total.</p>
+<dl class="vars"><div><dt>M*</dt><dd>The best valid set of slot-to-field matches; the star means best-scoring.</dd></div><div><dt>argmax_M</dt><dd>Choose the matching M that makes the following total as large as possible.</dd></div><div><dt>&Sigma;</dt><dd>Add up the weight of every matched pair in M.</dd></div><div><dt>(s, f) &isin; M</dt><dd>One slot-field pair that belongs to the matching M.</dd></div><div><dt>s</dt><dd>A part of the request that needs a field, such as measure or dimension. <span class="ex">Revenue is a measure slot</span></dd></div><div><dt>f</dt><dd>A column in a candidate data source. <span class="ex">amount is a candidate revenue field</span></dd></div><div><dt>w(s, f)</dt><dd>A fit score for pairing field f with slot s; larger means a better fit. <span class="ex">Revenue to amount scores 0.90</span></dd></div></dl>
 <p>If each weight is a log probability, w(s, f) = log P(f represents s), then maximizing the sum is the same as maximizing the joint probability that all the matches are right. This is the same trick used for join paths in Module 3.</p>
 
 <h3>Why greedy fails</h3>
@@ -74,6 +76,7 @@
 <p><code>amount</code> is a generic name, so it fits both concepts. <code>sales_total</code> only fits Revenue.</p>
 <div class="formula">Greedy:   Revenue → amount (0.90), then Refund → sales_total (0.10)    total = 1.00
 Optimal:  Revenue → sales_total (0.80),  Refund → amount (0.85)        total = 1.65</div>
+<dl class="vars"><div><dt>Greedy</dt><dd>Take the highest-scoring available pair first, without optimizing the total.</dd></div><div><dt>Revenue &rarr; amount</dt><dd>Assign the Revenue slot to the amount field; score 0.90. <span class="ex">the largest single score in the table</span></dd></div><div><dt>Refund &rarr; sales_total</dt><dd>Assign Refund to the only field left; score 0.10.</dd></div><div><dt>Optimal</dt><dd>Choose the valid assignment with the largest combined score.</dd></div><div><dt>Revenue &rarr; sales_total</dt><dd>Score 0.80 in the example table.</dd></div><div><dt>Refund &rarr; amount</dt><dd>Score 0.85 in the example table.</dd></div><div><dt>total</dt><dd>The sum of the chosen pair scores. <span class="ex">1.00 for greedy, 1.65 for optimal</span></dd></div><div><dt>&rarr;</dt><dd>Means &ldquo;assign this slot to this field.&rdquo;</dd></div></dl>
 <p>Greedy grabbed the most attractive pair and left Refund with a nonsense match. The optimal solution gives up a little on Revenue to gain a lot on Refund.</p>
 <div class="diagram"><svg viewBox="0 0 520 170" role="img" aria-label="Bipartite graph of Revenue and Refund to amount and sales_total">
   <g font-size="12">
@@ -117,7 +120,8 @@ Optimal:  Revenue → sales_total (0.80),  Refund → amount (0.85)        total
 Subtract row minima (0, 0.05): Revenue 0.00 0.10 | Refund 0.00 0.75
 Subtract column minima (0, 0.10): Revenue 0.00 0.00 | Refund 0.00 0.65
 Zeros: (Revenue, amount), (Revenue, sales_total), (Refund, amount)
-Full set with no shared row or column: Revenue → sales_total, Refund → amount   ✓</div></div>
+Full set with no shared row or column: Revenue → sales_total, Refund → amount   ✓</div>
+<dl class="vars"><div><dt>Cost</dt><dd>A number to minimize instead of maximizing the fit weight.</dd></div><div><dt>0.90</dt><dd>The largest weight in the Revenue/Refund table, used as the max weight.</dd></div><div><dt>weight</dt><dd>The fit score of a slot-field pair; subtracting it from 0.90 makes stronger fits cheaper.</dd></div><div><dt>amount, sales_total</dt><dd>The two candidate fields, the columns of the table.</dd></div><div><dt>Revenue, Refund</dt><dd>The two request slots, the rows of the table.</dd></div><div><dt>0.00, 0.10, 0.05, 0.80</dt><dd>Costs after subtracting each fit from 0.90: Revenue/amount, Revenue/sales_total, Refund/amount, Refund/sales_total.</dd></div><div><dt>row minima (0, 0.05)</dt><dd>The smallest cost in each slot row, subtracted from that row to create zeros.</dd></div><div><dt>column minima (0, 0.10)</dt><dd>The smallest remaining cost in each field column, subtracted next.</dd></div><div><dt>0.75, 0.65</dt><dd>The remaining positive costs for Refund after the row and column reductions.</dd></div><div><dt>Zeros</dt><dd>A zero marks a currently best available pairing.</dd></div><div><dt>&check;</dt><dd>Confirms the final assignment uses each row and column once.</dd></div></dl></div>
 
 <h3>Practical variations</h3>
 <table>
@@ -143,6 +147,7 @@ Full set with no shared row or column: Revenue → sales_total, Refund → amoun
 </table>
 <p>Fuzzy example: &ldquo;Calfornia&rdquo; vs. &ldquo;California&rdquo; is one insertion apart, and the longer word has 10 letters.</p>
 <div class="formula">sim = 1 − 1/10 = 0.90   ≥ τ_v = 0.85   ⇒  accept, and mention the correction</div>
+<dl class="vars"><div><dt>sim</dt><dd>Similarity between the typed value and a stored value, from 0 (nothing alike) to 1 (identical). <span class="ex">Calfornia and California score 0.90</span></dd></div><div><dt>1 (inside 1/10)</dt><dd>The number of single-letter edits needed to turn &ldquo;Calfornia&rdquo; into &ldquo;California&rdquo;.</dd></div><div><dt>10</dt><dd>The number of letters in the longer word, California.</dd></div><div><dt>&minus;</dt><dd>Subtracts the edit fraction from a perfect similarity of 1.</dd></div><div><dt>&tau;_v</dt><dd>The minimum similarity needed to accept a fuzzy value match. <span class="ex">the lesson sets it to 0.85</span></dd></div><div><dt>&ge;</dt><dd>Means the similarity must be at least the threshold.</dd></div><div><dt>&rArr;</dt><dd>Means the passed test leads to accepting the value and mentioning the correction.</dd></div></dl>
 <div class="callout plain" data-tag="In plain English">
 <p>Try the exact spelling first, then ignore capital letters and stray spaces, and only then allow &ldquo;close enough&rdquo; typos. The more forgiving the lookup, the more clearly the system should tell you what it assumed.</p>
 </div>
@@ -154,6 +159,7 @@ Full set with no shared row or column: Revenue → sales_total, Refund → amoun
 <h3>Which column holds the value?</h3>
 <p>Sometimes the value is known but the field isn&rsquo;t. &ldquo;Revenue from Gold customers&rdquo;: where does &ldquo;Gold&rdquo; live? Treat it as Bayesian inference over the candidate fields:</p>
 <div class="formula">P(f | v) ∝ P(v | f) · P(f | slot)</div>
+<dl class="vars"><div><dt>P(f | v)</dt><dd>The relative probability that field f is the right column, given value v; compare it across fields. <span class="ex">Gold: customer_tier 0.096 vs product_color 0.00006</span></dd></div><div><dt>P(v | f)</dt><dd>The chance of seeing value v in field f, from 0 to 1. <span class="ex">Gold is in 1,200 of 10,000 customer_tier rows = 0.12</span></dd></div><div><dt>P(f | slot)</dt><dd>How well field f fits the kind of slot the template expects, from 0 to 1. <span class="ex">customer_tier fits a customer slot at 0.8</span></dd></div><div><dt>&prop;</dt><dd>Is proportional to: multiply the two clues, then rescale across fields if exact probabilities are needed.</dd></div><div><dt>&middot;</dt><dd>Multiply the value-frequency clue by the slot-fit clue.</dd></div><div><dt>|</dt><dd>Means &ldquo;given&rdquo;: the thing after the bar is already known.</dd></div></dl>
 <ul>
 <li>P(v | f) is how common v is in field f.</li>
 <li>P(f | slot) is how well the field&rsquo;s type fits the slot. The template expects a customer attribute.</li>
@@ -172,6 +178,7 @@ Full set with no shared row or column: Revenue → sales_total, Refund → amoun
 <h3>The empty-result check</h3>
 <p>A query that returns zero rows is strong evidence that a value or filter is wrong, rather than evidence that the true answer is zero:</p>
 <div class="formula">if |result| = 0:   re-check each filter value  →  relax filters one at a time  →  find which one empties the result</div>
+<dl class="vars"><div><dt>|result|</dt><dd>The number of rows the query returned; the bars mean a count here.</dd></div><div><dt>= 0</dt><dd>No rows came back; a count, not a probability.</dd></div><div><dt>filter value</dt><dd>A condition in the request that limits rows, such as the location Paris.</dd></div><div><dt>&rarr;</dt><dd>Means go to the next troubleshooting step: re-check values, relax filters one at a time, find which one empties the result.</dd></div></dl>
 </section>
 
 <section data-toc="5.4 Combining confidence">
@@ -179,6 +186,7 @@ Full set with no shared row or column: Revenue → sales_total, Refund → amoun
 <p>Every stage so far produced a probability. If the stages are roughly independent, the probability that everything is right is their product:</p>
 <div class="formula">Conf = Πᵢ pᵢ        log Conf = Σᵢ log pᵢ</div>
 <p class="plainline">the chance that every step is right is each step&rsquo;s chance multiplied together, so it can only get smaller.</p>
+<dl class="vars"><div><dt>Conf</dt><dd>The probability that every pipeline stage is correct, from 0 to 1.</dd></div><div><dt>&Pi;&#7522;</dt><dd>Multiply together one number for each stage i.</dd></div><div><dt>p&#7522;</dt><dd>The probability that stage i is correct, from 0 to 1. <span class="ex">intent is 0.90</span></dd></div><div><dt>i</dt><dd>Counts the pipeline stages: intent, source, join, entity, field matching.</dd></div><div><dt>log Conf</dt><dd>The natural logarithm of Conf; it turns multiplication into addition.</dd></div><div><dt>&Sigma;&#7522;</dt><dd>Add up the log of each stage&rsquo;s probability.</dd></div></dl>
 <h3>Worked example</h3>
 <table>
 <tr><th>Stage</th><th>Module</th><th class="num">p<sub>i</sub></th></tr>
@@ -189,6 +197,7 @@ Full set with no shared row or column: Revenue → sales_total, Refund → amoun
 <tr><td>Field matching</td><td>5</td><td class="num">0.85</td></tr>
 </table>
 <div class="formula">Conf = 0.90 × 0.66 × 0.74 × 0.69 × 0.85 ≈ 0.258</div>
+<dl class="vars"><div><dt>Conf</dt><dd>The chance that all five listed stages are right.</dd></div><div><dt>0.90</dt><dd>Confidence in the intent (rank).</dd></div><div><dt>0.66</dt><dd>Confidence in the source choice.</dd></div><div><dt>0.74</dt><dd>Confidence in the join path.</dd></div><div><dt>0.69</dt><dd>Confidence in the entity (Paris, France).</dd></div><div><dt>0.85</dt><dd>Confidence in the field matching.</dd></div><div><dt>&times;</dt><dd>Multiply, because every stage must be right.</dd></div><div><dt>&approx; 0.258</dt><dd>The result, about 25.8%.</dd></div></dl>
 <div class="flow">
   <div class="node"><b>Intent</b>0.90</div><span class="arrow">&times;</span>
   <div class="node"><b>Source</b>0.66</div><span class="arrow">&times;</span>
@@ -218,6 +227,7 @@ Full set with no shared row or column: Revenue → sales_total, Refund → amoun
 <h3>When stages are not independent</h3>
 <p>If two stages depend on each other (for example, the entity choice makes a particular source more likely), the simple product under-counts confidence. The general form is the chain rule:</p>
 <div class="formula">P(all correct) = P(s₁) · P(s₂ | s₁) · P(s₃ | s₁, s₂) · …</div>
+<dl class="vars"><div><dt>P(all correct)</dt><dd>The chance every stage in the chain is correct.</dd></div><div><dt>P(s&#8321;)</dt><dd>The chance the first stage is correct.</dd></div><div><dt>s&#8321;, s&#8322;, s&#8323;</dt><dd>Stage 1, stage 2 and stage 3; the number is the stage&rsquo;s position in the pipeline.</dd></div><div><dt>P(s&#8322; | s&#8321;)</dt><dd>The chance stage 2 is correct, given that stage 1 is correct.</dd></div><div><dt>P(s&#8323; | s&#8321;, s&#8322;)</dt><dd>The chance stage 3 is correct, given that stages 1 and 2 are correct.</dd></div><div><dt>&middot;</dt><dd>Multiply the conditional chances together.</dd></div><div><dt>&hellip;</dt><dd>The same pattern continues for later stages.</dd></div></dl>
 </section>
 
 <section data-toc="5.5 Sanity checks">
@@ -228,16 +238,20 @@ Full set with no shared row or column: Revenue → sales_total, Refund → amoun
 <h3>Check 1: Consistency with a reference value</h3>
 <p>If an independent reference A<sub>ref</sub> exists (a curated report, a different source), measure agreement:</p>
 <div class="formula">Consistency(A) = exp( −η · |A − A_ref| / |A_ref| )</div>
+<dl class="vars"><div><dt>Consistency(A)</dt><dd>A score from 0 to 1 for how closely result A agrees with a reference; higher is closer.</dd></div><div><dt>exp</dt><dd>The exponential function: e raised to the value in the parentheses.</dd></div><div><dt>&eta;</dt><dd>A tuning constant: turn it up and the same gap lowers the score more. Typical use is a small number. <span class="ex">the example uses &eta; = 2</span></dd></div><div><dt>A</dt><dd>The result being checked. <span class="ex">$1.05M</span></dd></div><div><dt>A_ref</dt><dd>The independent reference value; ref means reference. <span class="ex">$1.00M</span></dd></div><div><dt>|A &minus; A_ref|</dt><dd>The gap between the two, ignoring direction (absolute value).</dd></div><div><dt>/ |A_ref|</dt><dd>Divide by the reference size so the gap is relative, not in dollars.</dd></div></dl>
 <p>Example: A = $1.05M, A<sub>ref</sub> = $1.00M and η = 2. The relative gap is 5%.</p>
 <div class="formula">Consistency = exp(−2 × 0.05) = e^(−0.1) ≈ 0.905</div>
+<dl class="vars"><div><dt>Consistency</dt><dd>The agreement score, from 0 to 1.</dd></div><div><dt>2</dt><dd>The tuning constant &eta; used in this example.</dd></div><div><dt>0.05</dt><dd>The relative gap between $1.05M and the $1.00M reference: 5%.</dd></div><div><dt>exp(&minus;0.1), e^(&minus;0.1)</dt><dd>Two ways of writing e raised to the power &minus;0.1.</dd></div><div><dt>&times;</dt><dd>Multiply the tuning constant by the relative gap.</dd></div><div><dt>&approx; 0.905</dt><dd>The score; a small gap leaves it close to 1.</dd></div></dl>
 <p>A 50% gap gives e<sup>−1</sup> ≈ 0.37: a strong signal that something differs, such as the definition, the filters or the time window.</p>
 <div class="widget" data-w="consistency" data-title="Consistency score: how far from the reference?"></div>
 
 <h3>Check 2: Robust outlier score</h3>
 <p>Compare the result with the history of the same metric. Plain z-scores are distorted by past outliers, so use the median and the median absolute deviation (MAD):</p>
 <div class="formula">modified z = 0.6745 · (x − median) / MAD          flag if |modified z| > 3.5</div>
+<dl class="vars"><div><dt>modified z</dt><dd>A robust outlier score: how many typical wiggles the new value is from the historical median.</dd></div><div><dt>0.6745</dt><dd>A fixed scaling constant that makes the median-based score comparable to an ordinary z-score.</dd></div><div><dt>x</dt><dd>The new value being checked. <span class="ex">$3.10M</span></dd></div><div><dt>median</dt><dd>The middle value of the metric&rsquo;s history. <span class="ex">$1.00M</span></dd></div><div><dt>MAD</dt><dd>Median absolute deviation: the typical size of past gaps from the median. <span class="ex">$0.08M</span></dd></div><div><dt>|modified z|</dt><dd>The score ignoring its sign, so too high and too low both count.</dd></div><div><dt>&gt; 3.5</dt><dd>The flag threshold: more than 3.5 typical wiggles from normal.</dd></div></dl>
 <p>Example: monthly revenue has a historical median of $1.00M and a MAD of $0.08M. The new result is $3.10M.</p>
 <div class="formula">modified z = 0.6745 × (3.10 − 1.00) / 0.08 = 0.6745 × 26.25 ≈ 17.7   ⇒  flag</div>
+<dl class="vars"><div><dt>modified z</dt><dd>The robust outlier score for this new revenue figure.</dd></div><div><dt>0.6745</dt><dd>The fixed scaling constant.</dd></div><div><dt>3.10</dt><dd>The new monthly revenue, in $ millions.</dd></div><div><dt>1.00</dt><dd>The historical median monthly revenue, in $ millions.</dd></div><div><dt>0.08</dt><dd>The historical MAD, in $ millions.</dd></div><div><dt>26.25</dt><dd>The gap (3.10 &minus; 1.00 = 2.10) divided by 0.08.</dd></div><div><dt>&approx; 17.7</dt><dd>The final score, far above the 3.5 threshold.</dd></div><div><dt>&rArr; flag</dt><dd>The high score raises a warning to investigate the query.</dd></div></dl>
 <p>A value of about 3× normal is the classic signature of a fan-out join (Module 3).</p>
 <div class="callout plain" data-tag="In plain English"><p>&ldquo;MAD&rdquo; is the typical wiggle of the metric month to month. The modified z-score counts how many typical wiggles away the new number is. Beyond about 3.5 wiggles, something is probably wrong with the query, not the business.</p></div>
 <div class="widget" data-w="outlier" data-title="Robust outlier score (median &amp; MAD)"></div>
@@ -256,9 +270,11 @@ Full set with no shared row or column: Revenue → sales_total, Refund → amoun
 <h3>Updating confidence after a red flag</h3>
 <p>A failed check is evidence. Use Bayes&rsquo; rule to update the prior confidence:</p>
 <div class="formula">P(correct | flag) = P(flag | correct) · P(correct) / P(flag)</div>
+<dl class="vars"><div><dt>P(correct | flag)</dt><dd>The updated chance the answer is correct after the flag fired.</dd></div><div><dt>P(flag | correct)</dt><dd>The chance the flag fires even though the answer is correct (a false alarm). <span class="ex">0.02</span></dd></div><div><dt>P(correct)</dt><dd>The prior chance the answer is correct, before the check. <span class="ex">0.8</span></dd></div><div><dt>P(flag)</dt><dd>The overall chance the flag fires, counting both correct and wrong answers.</dd></div><div><dt>|</dt><dd>Means &ldquo;given&rdquo;: the event after the bar is already known.</dd></div><div><dt>&middot; and /</dt><dd>Multiply the likelihood by the prior, then divide by the overall flag chance.</dd></div></dl>
 <p>Example: prior P(correct) = 0.8. Correct answers rarely trigger the flag, so P(flag | correct) = 0.02. Wrong answers often do, so P(flag | wrong) = 0.5.</p>
 <div class="formula">P(flag) = 0.02 × 0.8 + 0.5 × 0.2 = 0.016 + 0.100 = 0.116
 P(correct | flag) = 0.016 / 0.116 ≈ 0.14</div>
+<dl class="vars"><div><dt>P(flag)</dt><dd>The overall chance the flag fires.</dd></div><div><dt>0.02</dt><dd>Chance of a flag when the answer is correct.</dd></div><div><dt>0.8</dt><dd>The prior chance the answer is correct.</dd></div><div><dt>0.5</dt><dd>Chance of a flag when the answer is wrong.</dd></div><div><dt>0.2</dt><dd>The chance the answer is wrong (1 &minus; 0.8).</dd></div><div><dt>0.016, 0.100</dt><dd>Flags coming from correct answers and from wrong answers.</dd></div><div><dt>0.116</dt><dd>The total flag chance, 11.6%.</dd></div><div><dt>P(correct | flag)</dt><dd>The updated chance of being correct after seeing the flag.</dd></div><div><dt>&approx; 0.14</dt><dd>About 14%, down from 80%.</dd></div></dl>
 <p>Confidence drops from 80% to 14%. The right response is to re-examine the plan, not to report the number.</p>
 <div class="callout analogy" data-tag="Analogy"><p>A smoke alarm that almost never goes off in a tidy kitchen (2%) but usually goes off when something is burning (50%). When it rings, you stop trusting &ldquo;everything is fine&rdquo; and go look, even if you were 80% sure dinner was fine.</p></div>
 <div class="widget" data-w="redflag" data-title="Red-flag Bayes update"></div>
@@ -269,6 +285,7 @@ P(correct | flag) = 0.016 / 0.116 ≈ 0.14</div>
 <p>There may be thousands of candidate sources or plans. Scoring each one in depth is too slow, so rankers work in two stages:</p>
 <div class="formula">Stage 1 (recall):     cheap score over everything      →  keep the top K   (e.g. K = 50)
 Stage 2 (precision):  rich score over those K only     →  final order</div>
+<dl class="vars"><div><dt>Stage 1 (recall)</dt><dd>A fast, broad pass that tries not to lose anything relevant.</dd></div><div><dt>Stage 2 (precision)</dt><dd>A slower, richer pass that orders the survivors carefully.</dd></div><div><dt>K</dt><dd>How many candidates Stage 1 keeps; a count. <span class="ex">K = 50</span></dd></div><div><dt>cheap score / rich score</dt><dd>A simple score over everything first, a detailed score over only the K survivors second.</dd></div><div><dt>&rarr;</dt><dd>Means candidates flow on to the next step.</dd></div></dl>
 <div class="diagram"><svg viewBox="0 0 600 170" role="img" aria-label="Two-stage funnel: thousands of candidates to top K to final order">
   <polygon points="20,20 250,45 250,125 20,150" fill="#faf7f0" stroke="#1a1815"/>
   <polygon points="250,45 420,60 420,110 250,125" fill="#fdf3dc" stroke="#1a1815"/>
@@ -290,11 +307,13 @@ Stage 2 (precision):  rich score over those K only     →  final order</div>
 <li>The goal is not to miss anything relevant. It&rsquo;s measured by recall at K:</li>
 </ul>
 <div class="formula">Recall@K = | relevant items in top K | / | all relevant items |</div>
+<dl class="vars"><div><dt>Recall@K</dt><dd>The fraction of all relevant items that made it into the top K; from 0 to 1.</dd></div><div><dt>K</dt><dd>How many top-ranked candidates are kept.</dd></div><div><dt>| &hellip; |</dt><dd>The bars mean &ldquo;how many items are in this set&rdquo;.</dd></div><div><dt>relevant items in top K</dt><dd>The relevant candidates found among the kept K.</dd></div><div><dt>all relevant items</dt><dd>Every relevant candidate that exists, the denominator.</dd></div><div><dt>/</dt><dd>Divide found relevant items by all relevant items.</dd></div></dl>
 <p>If Stage 1 misses a relevant item, Stage 2 can never recover it. Stage 1 errors are permanent.</p>
 
 <h3>Stage 2: re-rank precisely</h3>
 <p>Score each of the K survivors with a richer function of many features:</p>
 <div class="formula">r(Q, d) = f_θ( cos, BM25, concept coverage, prior P(d), field-match quality, value-validation pass, sanity score, … )</div>
+<dl class="vars"><div><dt>r(Q, d)</dt><dd>The ranking score for candidate d for question Q; higher ranks it nearer the top.</dd></div><div><dt>Q</dt><dd>The user&rsquo;s parsed question.</dd></div><div><dt>d</dt><dd>One candidate source or plan being ranked.</dd></div><div><dt>f_&theta;</dt><dd>A scoring function whose behaviour is set by learned weights &theta;.</dd></div><div><dt>&theta;</dt><dd>The learned weights: how much each feature counts.</dd></div><div><dt>cos</dt><dd>Cosine similarity between question and candidate vectors; about &minus;1 to 1, higher means more alike.</dd></div><div><dt>BM25</dt><dd>A keyword-match score: higher when the question&rsquo;s words appear in the candidate, adjusted for word rarity and length.</dd></div><div><dt>concept coverage</dt><dd>How many of the requested concepts the candidate covers.</dd></div><div><dt>prior P(d)</dt><dd>How plausible candidate d is before looking at this question, 0 to 1.</dd></div><div><dt>field-match quality</dt><dd>How well its fields fit the slots (5.2).</dd></div><div><dt>value-validation pass</dt><dd>Whether the requested values were found in the right fields (5.3).</dd></div><div><dt>sanity score</dt><dd>How plausible its result looks (5.5).</dd></div><div><dt>&hellip;</dt><dd>More features can be added.</dd></div></dl><p class="plainline">Read it left to right: the function takes the question and a candidate, blends text similarity, keyword match, concept coverage, prior, field fit, value checks and sanity into one number, and that number is the ranking score.</p>
 <p>The simplest form is linear, r = Σⱼ θⱼ · xⱼ. More expressive forms (trees, neural networks) capture interactions between features.</p>
 
 <h3>The trade-off</h3>
@@ -314,11 +333,13 @@ Stage 2 (precision):  rich score over those K only     →  final order</div>
 
 <h3>Pointwise: predict each item&rsquo;s relevance</h3>
 <div class="formula">ℒ = Σ_d ( r(Q, d) − label(d) )²       or cross-entropy for yes/no labels</div>
+<dl class="vars"><div><dt>&#8466;</dt><dd>The training loss: a number that is smaller when predictions match the labels.</dd></div><div><dt>&Sigma;_d</dt><dd>Add up the error for every candidate d.</dd></div><div><dt>d</dt><dd>One candidate item.</dd></div><div><dt>r(Q, d)</dt><dd>The predicted relevance score for d.</dd></div><div><dt>label(d)</dt><dd>The human-given answer for d, such as 0/1 or a grade.</dd></div><div><dt>&sup2;</dt><dd>Square the gap so big mistakes count more.</dd></div><div><dt>cross-entropy</dt><dd>An alternative loss for yes/no labels that punishes confident wrong answers.</dd></div></dl>
 <p>This is simple, but it optimizes absolute scores, while ranking only cares about order.</p>
 
 <h3>Pairwise: get pairs in the right order</h3>
 <p>For each pair (d⁺ more relevant than d⁻), penalize the ranker when d⁻ scores close to or above d⁺:</p>
 <div class="formula">ℒ_pair = log( 1 + exp( −( r(d⁺) − r(d⁻) ) ) )</div>
+<dl class="vars"><div><dt>&#8466;_pair</dt><dd>The loss for one pair; smaller when the better item scores higher.</dd></div><div><dt>log</dt><dd>The natural logarithm.</dd></div><div><dt>exp</dt><dd>e raised to the value in the parentheses.</dd></div><div><dt>d&#8314;</dt><dd>The more relevant item of the pair.</dd></div><div><dt>d&#8315;</dt><dd>The less relevant item of the pair.</dd></div><div><dt>r(d&#8314;) &minus; r(d&#8315;)</dt><dd>The score gap; positive means the pair is in the right order. <span class="ex">+1 gives loss 0.313</span></dd></div><div><dt>1 +</dt><dd>Keeps the logarithm&rsquo;s input positive so the loss is never negative.</dd></div><div><dt>&minus;( &hellip; )</dt><dd>Flips the sign so a wrong-way gap makes the loss large.</dd></div></dl>
 <table>
 <tr><th>Scores</th><th class="num">Gap r(d⁺) − r(d⁻)</th><th>Loss</th></tr>
 <tr><td>r(d⁺) = 2, r(d⁻) = 1 (correct order)</td><td class="num">+1</td><td>ln(1 + e<sup>−1</sup>) ≈ 0.313</td></tr>
@@ -332,6 +353,7 @@ Stage 2 (precision):  rich score over those K only     →  final order</div>
 <p>Treat the scores as a probability distribution over which item belongs at the top, and match it to the ideal distribution:</p>
 <div class="formula">P_θ(d at top) = softmax_d( r(Q, d) )
 ℒ_list = −Σ_d P_ideal(d) · log P_θ(d at top)</div>
+<dl class="vars"><div><dt>P_&theta;(d at top)</dt><dd>The model&rsquo;s probability that d belongs first, using weights &theta;.</dd></div><div><dt>softmax_d</dt><dd>Turns all candidates&rsquo; scores into probabilities from 0 to 1 that add to 1.</dd></div><div><dt>r(Q, d)</dt><dd>The score of candidate d for question Q.</dd></div><div><dt>&#8466;_list</dt><dd>The loss for the whole list.</dd></div><div><dt>&Sigma;_d</dt><dd>Add up one term per candidate d.</dd></div><div><dt>P_ideal(d)</dt><dd>The ideal probability that d is first, taken from the human ranking.</dd></div><div><dt>log P_&theta;(d at top)</dt><dd>The log of the model&rsquo;s probability for d being first.</dd></div><div><dt>&minus;</dt><dd>The minus sign makes the loss small when the model gives high probability to the ideal top items.</dd></div></dl>
 <p>Listwise methods most directly target metrics like nDCG (section 5.9), because they weight mistakes near the top more heavily.</p>
 <table>
 <tr><th>Family</th><th>Optimizes</th><th>Strength</th><th>Weakness</th></tr>
@@ -352,6 +374,7 @@ Stage 2 (precision):  rich score over those K only     →  final order</div>
 <p>Build the list one item at a time. Each pick balances relevance against similarity to what has already been chosen:</p>
 <div class="formula">next = argmax_{d ∉ S} [ λ · r(Q, d)  −  (1 − λ) · max_{s ∈ S} sim(d, s) ]</div>
 <p class="plainline">pick the item that is relevant but not a copy of something already on the list.</p>
+<dl class="vars"><div><dt>next</dt><dd>The candidate chosen to add to the list next.</dd></div><div><dt>argmax</dt><dd>Pick the candidate with the largest value of the bracketed expression.</dd></div><div><dt>d &notin; S</dt><dd>Candidate d is not already in the selected set S.</dd></div><div><dt>&lambda;</dt><dd>A tuning weight from 0 to 1: higher favours relevance, lower favours variety. <span class="ex">0.7 in the worked example</span></dd></div><div><dt>r(Q, d)</dt><dd>The relevance score of d for question Q. <span class="ex">d&#8322; scores 0.88</span></dd></div><div><dt>sim(d, s)</dt><dd>How similar d is to an already chosen item s, about 0 to 1. <span class="ex">d&#8322; vs d&#8321; is 0.95</span></dd></div><div><dt>max_{s &isin; S}</dt><dd>Take the largest similarity to anything already chosen, so the closest duplicate is penalized.</dd></div><div><dt>(1 &minus; &lambda;)</dt><dd>The weight on the duplicate penalty, the complement of &lambda;.</dd></div><div><dt>&middot;, &minus;</dt><dd>Multiply each part by its weight, then subtract the duplicate penalty from the relevance.</dd></div></dl>
 <div class="callout analogy" data-tag="Analogy"><p>Choosing a playlist for a road trip: you want the best songs, but not the same song three times in a row. Each new pick must be good <i>and</i> different from what is already queued.</p></div>
 
 <h3>Worked example (λ = 0.7)</h3>
@@ -365,6 +388,7 @@ Stage 2 (precision):  rich score over those K only     →  final order</div>
 <p><b>Pick 2:</b></p>
 <div class="formula">MMR(d₂) = 0.7 × 0.88 − 0.3 × 0.95 = 0.616 − 0.285 = 0.331
 MMR(d₃) = 0.7 × 0.70 − 0.3 × 0.20 = 0.490 − 0.060 = 0.430   ← chosen</div>
+<dl class="vars"><div><dt>MMR(d&#8322;)</dt><dd>The score for choosing d&#8322; as the second item.</dd></div><div><dt>0.7</dt><dd>&lambda;, the relevance weight.</dd></div><div><dt>0.88</dt><dd>The relevance score of d&#8322;.</dd></div><div><dt>0.3</dt><dd>1 &minus; &lambda;, the weight on variety.</dd></div><div><dt>0.95</dt><dd>How similar d&#8322; is to the already chosen d&#8321;: nearly a copy.</dd></div><div><dt>0.616, 0.285</dt><dd>The weighted relevance (0.7 &times; 0.88) and the weighted duplicate penalty (0.3 &times; 0.95).</dd></div><div><dt>0.331</dt><dd>The final MMR score; higher is preferred.</dd></div><div><dt>&times;, &minus;</dt><dd>Multiply each part by its weight, then subtract.</dd></div></dl>
 <p>d<sub>3</sub> ranks second, ahead of the near-duplicate d<sub>2</sub>, even though d<sub>2</sub> is more relevant. The user now sees two genuinely different options: a summary and its detail.</p>
 <div class="widget" data-w="mmr" data-title="MMR: slide &lambda; and watch the order change"></div>
 </section>
@@ -375,22 +399,27 @@ MMR(d₃) = 0.7 × 0.70 − 0.3 × 0.20 = 0.490 − 0.060 = 0.430   ← chosen</
 <h3>Precision and recall at k</h3>
 <div class="formula">Precision@k = relevant items in top k / k
 Recall@k    = relevant items in top k / all relevant items</div>
+<dl class="vars"><div><dt>Precision@k</dt><dd>The fraction of the top k results that are relevant, 0 to 1.</dd></div><div><dt>Recall@k</dt><dd>The fraction of all relevant results found in the top k, 0 to 1.</dd></div><div><dt>relevant items in top k</dt><dd>How many relevant results are among the first k.</dd></div><div><dt>k</dt><dd>How many top positions are examined; a whole number.</dd></div><div><dt>all relevant items</dt><dd>The total number of relevant results that exist.</dd></div><div><dt>/</dt><dd>Divide the relevant count by k (precision) or by all relevant items (recall).</dd></div></dl>
 <p>These metrics ignore order within the top k.</p>
 
 <h3>Mean reciprocal rank (MRR)</h3>
 <p>This measures how high the first relevant item appears, averaged over queries:</p>
 <div class="formula">MRR = (1 / |queries|) · Σ_q  1 / rank of first relevant item for q</div>
+<dl class="vars"><div><dt>MRR</dt><dd>Mean reciprocal rank: the average of 1/rank of the first relevant result; 0 to 1.</dd></div><div><dt>|queries|</dt><dd>The number of queries; the bars mean count. <span class="ex">three queries</span></dd></div><div><dt>&Sigma;_q</dt><dd>Add up one term for every query q.</dd></div><div><dt>q</dt><dd>One search question in the test set.</dd></div><div><dt>rank of first relevant item</dt><dd>The position, counting from 1, of the first useful result for q.</dd></div><div><dt>1 / rank</dt><dd>The reward: rank 1 gives 1, rank 2 gives 1/2, rank 3 gives 1/3.</dd></div><div><dt>(1 / |queries|)</dt><dd>Divide by the number of queries to get an average.</dd></div></dl>
 <p>Example: across three queries, the first relevant item appears at ranks 1, 3 and 2.</p>
 <div class="formula">MRR = (1/1 + 1/3 + 1/2) / 3 = 1.833 / 3 ≈ 0.611</div>
+<dl class="vars"><div><dt>MRR</dt><dd>The average reciprocal rank over the three example queries.</dd></div><div><dt>1/1, 1/3, 1/2</dt><dd>The rewards for first relevant results at ranks 1, 3 and 2.</dd></div><div><dt>3</dt><dd>The number of queries, the divisor.</dd></div><div><dt>1.833 / 3</dt><dd>The sum of the three rewards divided by three.</dd></div><div><dt>&approx; 0.611</dt><dd>The MRR; closer to 1 means useful results come earlier.</dd></div></dl>
 
 <h3>Normalized discounted cumulative gain (nDCG)</h3>
 <p>nDCG uses graded relevance (0 = irrelevant … 3 = perfect) and discounts items lower in the list:</p>
 <div class="formula">DCG@k  = Σᵢ₌₁ᵏ (2^{relᵢ} − 1) / log₂(i + 1)
 nDCG@k = DCG@k / IDCG@k         (IDCG = DCG of the ideal ordering; nDCG ∈ [0, 1])</div>
+<dl class="vars"><div><dt>DCG@k</dt><dd>Discounted cumulative gain through position k; higher when strong results sit near the top.</dd></div><div><dt>&Sigma;&#7522;&#8332;&#8321;^k</dt><dd>Add one term for each position i from 1 to k.</dd></div><div><dt>rel&#7522;</dt><dd>The relevance grade of the item at position i, 0 to 3. <span class="ex">grades 2, 3, 0 in the example</span></dd></div><div><dt>2^{rel&#7522;} &minus; 1</dt><dd>The gain: higher grades earn much more than proportional credit.</dd></div><div><dt>log&#8322;(i + 1)</dt><dd>The position discount: lower positions are divided by a larger number.</dd></div><div><dt>nDCG@k</dt><dd>DCG divided by the best possible DCG, so it is normalized.</dd></div><div><dt>IDCG@k</dt><dd>The DCG of the ideal ordering of the same items.</dd></div><div><dt>&isin; [0, 1]</dt><dd>nDCG always lies between 0 and 1; 1 means perfect order.</dd></div></dl>
 <p>Example: the system returns relevance grades [2, 3, 0]. The ideal order is [3, 2, 0].</p>
 <div class="formula">DCG  = (2² − 1)/log₂2 + (2³ − 1)/log₂3 + 0 = 3/1 + 7/1.585 ≈ 3.000 + 4.417 = 7.417
 IDCG = (2³ − 1)/log₂2 + (2² − 1)/log₂3 + 0 = 7/1 + 3/1.585 ≈ 7.000 + 1.893 = 8.893
 nDCG@3 = 7.417 / 8.893 ≈ 0.834</div>
+<dl class="vars"><div><dt>DCG</dt><dd>The discounted gain of the returned order [2, 3, 0].</dd></div><div><dt>IDCG</dt><dd>The discounted gain of the ideal order [3, 2, 0].</dd></div><div><dt>2 and 3</dt><dd>Relevance grades: 2 is good, 3 is perfect.</dd></div><div><dt>2&sup2; &minus; 1 = 3; 2&sup3; &minus; 1 = 7</dt><dd>The gains for grades 2 and 3.</dd></div><div><dt>log&#8322;2 = 1; log&#8322;3 &approx; 1.585</dt><dd>The discounts for position 1 and position 2.</dd></div><div><dt>7.417, 8.893</dt><dd>DCG of the returned order and of the ideal order.</dd></div><div><dt>nDCG@3</dt><dd>The returned DCG divided by the ideal DCG, using the top 3.</dd></div><div><dt>&approx; 0.834</dt><dd>About 83.4% of the ideal ordering quality.</dd></div></dl>
 <p>Putting the second-best item first costs about 17% of the ideal score. The exponential gain (2<sup>rel</sup> − 1) means that misplacing the best item hurts most.</p>
 <div class="callout plain" data-tag="In plain English"><p>nDCG gives big credit for putting great results near the top and shrinking credit for results further down. It then divides by the best score that was possible, so 1.0 means &ldquo;perfect order&rdquo;.</p></div>
 <table>
@@ -412,6 +441,7 @@ nDCG@3 = 7.417 / 8.893 ≈ 0.834</div>
                + Σ_stages log pᵢ                                   ← stage confidence    (5.4)
                + log Consistency(A_π) + log P(correct | checks)    ← sanity checks       (5.5)
                + log r(Q, sources of π)                            ← retrieval rank      (5.6–5.7)</div>
+<dl class="vars"><div><dt>log Score(&pi;)</dt><dd>The log of the total score for plan &pi;; the plan with the highest value wins.</dd></div><div><dt>&pi;</dt><dd>One complete candidate plan: sources, joins, field matches and filters.</dd></div><div><dt>&Sigma;_{(s,f) &isin; M*}</dt><dd>Add up a term for each slot-field pair in the best matching M*.</dd></div><div><dt>P(f represents s)</dt><dd>The chance that field f really means slot s.</dd></div><div><dt>&Sigma;_values</dt><dd>Add up a term for each literal value in the question.</dd></div><div><dt>P(value valid in field)</dt><dd>The chance that the value exists in the matched field.</dd></div><div><dt>&Sigma;_stages log p&#7522;</dt><dd>Add up the log confidence of every pipeline stage i.</dd></div><div><dt>Consistency(A_&pi;)</dt><dd>The reference-agreement score of the answer A that plan &pi; produces.</dd></div><div><dt>P(correct | checks)</dt><dd>The chance the answer is correct after the sanity checks, given the results.</dd></div><div><dt>r(Q, sources of &pi;)</dt><dd>The retrieval rank score of the sources plan &pi; uses.</dd></div><div><dt>&larr; (labels)</dt><dd>Arrows and numbers on the right only name which section each line comes from.</dd></div><div><dt>log, +</dt><dd>Take the log of each chance, then add; adding logs is the same as multiplying the chances.</dd></div></dl><p class="plainline">Read it left to right: add the log evidence for field matching, value validation, stage confidence, sanity checks and retrieval rank; the plan with the highest total is the best candidate.</p>
 <p>The candidates are then ordered by score and diversified with MMR (5.8). The leading candidates go to Module 6, which selects the final answer.</p>
 <div class="cards">
   <div class="card"><h5>5.2 Field matching</h5><p>Are the right columns used for each slot?</p></div>

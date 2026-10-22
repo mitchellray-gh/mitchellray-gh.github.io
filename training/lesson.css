@@ -149,3 +149,12 @@ footer.sf{text-align:center;padding:2rem;font-size:.8rem;color:var(--dim);border
 @media(max-width:980px){.layout{grid-template-columns:1fr}.toc{display:none}}
 @media(max-width:560px){.bars .b{grid-template-columns:90px 1fr 54px}}
 .svgscroll{overflow-x:auto;max-width:100%;margin:0 0 1.2rem}.svgscroll>svg.diagram{margin-bottom:0}
+.vars{margin:0 0 1.2rem;border:1px solid var(--border);border-top:3px solid var(--accent);background:var(--surface);padding:.2rem 1rem .6rem}
+.vars::before{content:"Every symbol, in plain words";display:block;font-family:var(--label);font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);margin:.6rem 0 .3rem}
+.vars>div{display:grid;grid-template-columns:minmax(4.5rem,max-content) 1fr;gap:.2rem .9rem;padding:.5rem 0;border-top:1px dashed var(--border)}
+.vars>div:first-of-type{border-top:0}
+.vars dt{font-family:var(--mono);font-weight:700;font-size:.9rem;overflow-wrap:anywhere}
+.vars dd{margin:0;font-size:.9rem;line-height:1.5;min-width:0}
+.vars dd .ex{display:block;color:var(--dim);margin-top:.15rem}
+.vars dd .ex::before{content:"Example: ";font-weight:700}
+@media(max-width:560px){.vars>div{grid-template-columns:1fr}}
