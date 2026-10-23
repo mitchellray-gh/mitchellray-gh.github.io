@@ -31,6 +31,11 @@ code{background:var(--surface2);border:1px solid var(--border);padding:.05em .35
 .objcard ol{padding-left:1.3rem}.objcard li{margin-bottom:.15rem}
 .legend{font-size:.82rem;color:var(--dim);margin-top:1rem;max-width:900px}
 .legend i{display:inline-block;width:.7rem;height:.7rem;vertical-align:middle;margin:0 .25rem 0 .1rem}
+.summary{background:var(--accent-soft);border:1px solid var(--rule);border-left:6px solid var(--green);padding:1.1rem 1.4rem;max-width:900px;margin:0 0 2rem}
+.summary h3,.mistakes h3{font-family:var(--label);font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem}
+.summary p{margin:0;line-height:1.6}
+.mistakes{background:var(--surface);border:1px solid var(--rule);border-left:6px solid var(--rose);padding:1.2rem 1.5rem;margin:2.5rem 0 1rem;max-width:900px}
+.mistakes ul{padding-left:1.3rem}.mistakes li{margin-bottom:.4rem;line-height:1.5}
 
 /* layout */
 .layout{max-width:1240px;margin:0 auto;padding:1rem 1.5rem 4rem;display:grid;grid-template-columns:230px minmax(0,1fr);gap:3rem}

@@ -87,6 +87,7 @@ document.addEventListener("DOMContentLoaded", function () {
   <div class="layout"><aside class="toc"><h4>On this page</h4></aside></div>`);
   const layout = document.querySelector(".layout");
   layout.appendChild(lesson);
+  if (m.summary) lesson.insertAdjacentHTML("afterbegin", `<div class="summary"><h3>The big picture in one paragraph</h3><p>${UI.esc(m.summary).replace(/(The question:|In:|Out:|Why it matters:)/g, "<b>$1</b>")}</p></div>`);
 
   // TOC + scroll spy
   const secs = [...lesson.querySelectorAll("section[data-toc]")], toc = layout.querySelector(".toc");
@@ -124,6 +125,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const pager = UI.el(`<div class="pager"><div>${prev ? `<a class="btn" href="${page(prev.id)}">&larr; Module ${prev.id}</a>` : `<a class="btn" href="./">&larr; All modules</a>`}</div>
     <button class="btn ${dn.has(n) ? "done" : ""}" id="mk">${dn.has(n) ? "\u2713 Completed" : "Mark module complete"}</button>
     <div>${next ? `<a class="btn primary" href="${page(next.id)}">Module ${next.id}: ${UI.esc(stage[next.id - 1])} &rarr;</a>` : `<a class="btn primary" href="./">Back to all modules</a>`}</div></div>`);
+  if (m.mistakes) lesson.appendChild(UI.el(`<div class="mistakes"><h3>Common mistakes to avoid</h3><ul>${m.mistakes.map(x => `<li>${UI.esc(x)}</li>`).join("")}</ul></div>`));
   lesson.appendChild(pager);
   pager.querySelector("#mk").addEventListener("click", e => {
     const s = getDone(); s.has(n) ? s.delete(n) : s.add(n); setDone(s);

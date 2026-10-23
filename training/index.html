@@ -53,6 +53,12 @@ footer{text-align:center;padding:2rem;font-size:.8rem;color:var(--dim);border-to
   <p class="intro" id="intro"></p>
   <div class="progress"><span id="ptext"></span><div class="bar"><i id="pbar"></i></div><a class="btn primary" id="cta" href="m1.html">Start Module 1</a></div>
   <div class="grid" id="grid"></div>
+  <div class="label" style="margin-top:2rem"><b>&sect;</b> Start here</div>
+  <div class="grid" id="paths">
+    <div class="card"><h3>Quick path <span class="mini">about 15 min</span></h3><p>Read the &ldquo;big picture&rdquo; box and the common mistakes at the top of each module, then take the end-to-end walkthrough.</p><p><a href="walkthrough.html">Start the walkthrough &rarr;</a></p></div>
+    <div class="card"><h3>Full course <span class="mini" id="fulltime">about 2 min per PDF page</span></h3><p>All six modules in order, with the interactive tools, then the final quiz.</p><p><a href="m1.html">Start Module 1 &rarr;</a></p></div>
+    <div class="card"><h3>Maintainer path</h3><p>Modules, then the source notes (where the course corrects the PDFs) and the glossary for every symbol.</p><p><a href="notes.html">Read the source notes &rarr;</a></p></div>
+  </div>
   <div class="label" style="margin-top:2rem"><b>&sect;</b> Study tools</div>
   <div class="grid" id="tools">
     <div class="card"><h3><a href="walkthrough.html">End-to-end walkthrough</a></h3><p>One question traced through all six stages with real numbers.</p></div>
@@ -65,6 +71,7 @@ footer{text-align:center;padding:2rem;font-size:.8rem;color:var(--dim);border-to
 </main>
 <footer>&copy; Mitchell Ray &middot; Training material</footer>
 <script src="modules.js"></script>
+<script>document.getElementById("fulltime").textContent = "about " + TRAINING.modules.reduce((a, m) => a + m.pages, 0) * 2 + " min";</script>
 <script>
 const T = window.TRAINING, KEY = "training-done";
 const done = new Set(JSON.parse(localStorage.getItem(KEY) || "[]"));
